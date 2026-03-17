@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // myApps_Common.js — Shared foundation for all KAP myApps modules
 // Contains: Supabase config, data layer, constants, utilities, Excel core
-// Loaded by: myApps_Portal_v18.html, myApps_VMS_v18.html (myApps_V17), myApps_HWMS_v18.html
+// Loaded by: myApps_Portal.html, myApps_VMS.html (myApps_V17), myApps_HWMS.html
 // ═══════════════════════════════════════════════════════════════════════════════
 const _COMMON_LOADED = true;
 
@@ -11,8 +11,8 @@ let _spinCount = 0;
 (function(){
   var d=document.createElement('div');
   d.id='_globalSpin';
-  d.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.55);z-index:99999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;backdrop-filter:blur(2px)';
-  d.innerHTML='<div style="width:44px;height:44px;border:4px solid rgba(42,154,160,.25);border-top-color:#2a9aa0;border-radius:50%;animation:_kspin .7s linear infinite"></div><div id="_spinMsg" style="color:#fff;font-size:13px;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.4)">Loading…</div>';
+  d.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.6);z-index:999999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)';
+  d.innerHTML='<div style="width:48px;height:48px;border:4px solid rgba(42,154,160,.2);border-top-color:#2a9aa0;border-radius:50%;animation:_kspin .65s linear infinite"></div><div id="_spinMsg" style="color:#fff;font-size:14px;font-weight:600;text-shadow:0 1px 6px rgba(0,0,0,.5);letter-spacing:.3px">Loading…</div>';
   var s=document.createElement('style');
   s.textContent='@keyframes _kspin{to{transform:rotate(360deg)}}';
   document.addEventListener('DOMContentLoaded',function(){ document.body.appendChild(d); document.head.appendChild(s); });
@@ -33,10 +33,11 @@ function _spin(show, msg){
 // Navigate to another page — covers screen with white overlay first to prevent content flash
 function _navigateTo(url){
   var ov=document.createElement('div');
-  ov.style.cssText='position:fixed;inset:0;background:#f8fafc;z-index:999999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px';
-  ov.innerHTML='<div style="width:40px;height:40px;border:4px solid rgba(42,154,160,.2);border-top-color:#2a9aa0;border-radius:50%;animation:_kspin .7s linear infinite"></div><div style="color:#64748b;font-size:13px;font-weight:600">Loading…</div>';
+  ov.style.cssText='position:fixed;inset:0;background:#f8fafc;z-index:9999999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;opacity:0;transition:opacity .15s';
+  ov.innerHTML='<div style="width:48px;height:48px;border:4px solid rgba(42,154,160,.2);border-top-color:#2a9aa0;border-radius:50%;animation:_kspin .65s linear infinite"></div><div style="color:#64748b;font-size:14px;font-weight:600;letter-spacing:.3px">Switching module…</div>';
   document.body.appendChild(ov);
-  setTimeout(function(){ window.location.href=url; }, 50);
+  requestAnimationFrame(function(){ ov.style.opacity='1'; });
+  setTimeout(function(){ window.location.href=url; }, 120);
 }
 
 // ── Module hooks (override in module scripts) ───────────────────────────────
@@ -1491,7 +1492,13 @@ async function _applyImportRows(rows, col, schema){
 }
 
 function importMaster(col,inputEl){
-  if(!CU||!CU.roles.some(r=>['Super Admin','Admin'].includes(r))){notify('⚠ Import is restricted to Admin users only.',true);if(inputEl)inputEl.value='';return;}
+  // Containers, invoices, users: Super Admin only
+  const _saOnlyCols=['hwmsContainers','hwmsInvoices','users'];
+  if(_saOnlyCols.includes(col)){
+    if(!CU||!CU.roles.includes('Super Admin')){notify('⚠ Import of '+col+' is restricted to Super Admin only.',true);if(inputEl)inputEl.value='';return;}
+  } else {
+    if(!CU||!(CU.roles.some(r=>['Super Admin','Admin'].includes(r))||(CU.hwmsRoles||[]).some(r=>['Super Admin','HWMS Admin'].includes(r)))){notify('⚠ Import is restricted to Admin users only.',true);if(inputEl)inputEl.value='';return;}
+  }
   const file=inputEl.files[0];
   if(!file){return;}
   inputEl.value='';
@@ -1595,8 +1602,8 @@ function sortTable(tbodyId, colIdx){
 
 
 async function del(col,id,fn){
-  // Block deleting confirmed invoices/containers (SA can override)
-  const isSA=CU&&CU.roles.includes('Super Admin');
+  // Block deleting confirmed invoices/containers (SA or HWMS Admin can override)
+  const isSA=CU&&(CU.roles.includes('Super Admin')||(CU.hwmsRoles||[]).includes('Super Admin')||(CU.hwmsRoles||[]).includes('HWMS Admin'));
   if(col==='hwmsInvoices'){const inv=byId(DB.hwmsInvoices||[],id);if(inv?.confirmed&&!isSA){notify('⚠ Cannot delete: Invoice is confirmed (RFD).',true);return;}}
   if(col==='hwmsContainers'){const c=byId(DB.hwmsContainers||[],id);if(c?.confirmed&&!isSA){notify('⚠ Cannot delete: Container is confirmed.',true);return;}}
   // Check if this record is referenced in any other data before allowing deletion

@@ -2189,7 +2189,7 @@ function _hwmsContUpdateReachedUI(c){
 }
 
 async function _hwmsContRevokeReached(){
-  if(!CU||!_hwmsIsSA()){notify('Only Super Admin can revoke reached status',true);return;}
+  if(!CU||!_hwmsIsAdmin()){notify('Only Super Admin or HWMS Admin can revoke reached status',true);return;}
   const id=document.getElementById('eHwmsContId').value;
   if(!id){notify('No container selected',true);return;}
   const c=byId(DB.hwmsContainers||[],id);if(!c)return;

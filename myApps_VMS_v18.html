@@ -2037,6 +2037,7 @@ function _showPortal(){
 }
 
 function launchVMS(targetPage, appId){
+  _spin(true,'Loading VMS…');
   _currentApp = appId || 'vms';
   _sbStopPing();
   if(!_sbChannel) _sbStartRealtime();
@@ -2050,7 +2051,7 @@ function launchVMS(targetPage, appId){
   if(tb) tb.style.display = 'flex';
   initApp();
   if(targetPage) showPage(targetPage, targetPage.replace('page',''));
-
+  _spin(false);
 }
 
 // ── Portal navigation functions ──────────────────────────────────────
@@ -2311,6 +2312,7 @@ function psRenderUsers(){
 window.addEventListener('load', ()=>_appBoot().catch(e=>console.error('Boot failed:',e)));
 // ── Portal: Profile save / photo / password ──────────────────────────────
 async function psProfileSave(){
+  _spin(true,'Saving profile…'); try{
   if(!CU) return;
   const fullName=(document.getElementById('psProfileFullName')?.value||'').trim();
   const mobile=(document.getElementById('psProfileMobile')?.value||'').trim();
@@ -2329,9 +2331,10 @@ async function psProfileSave(){
   const uc=document.querySelector('.ps-user-name'); if(uc) uc.textContent=fullName;
   _refreshCurrentUserUI();
   _psProfileMsg('Profile saved!',true);
-}
+}finally{_spin(false);}}
 
 async function psProfileSavePass(){
+  _spin(true,'Updating password…'); try{
   if(!CU) return;
   const oldPass=document.getElementById('psProfileOldPass')?.value||'';
   const newPass=document.getElementById('psProfileNewPass')?.value||'';
@@ -2354,7 +2357,7 @@ async function psProfileSavePass(){
   document.getElementById('psProfileNewPass').value='';
   document.getElementById('psProfileConfPass').value='';
   _psPassMsg('Password updated successfully!',true);
-}
+}finally{_spin(false);}}
 
 function psTogglePassSection(){
   const s=document.getElementById('psPassSection');
@@ -2365,12 +2368,13 @@ function psTogglePassSection(){
 }
 
 async function psClearProfilePhoto(){
+  _spin(true,'Clearing photo…'); try{
   if(!CU) return;
   CU.photo='';
   const dbUser=byId(DB.users,CU.id);
   if(dbUser){ dbUser.photo=''; await _dbSave('users',dbUser); }
   _refreshCurrentUserUI();
-}
+}finally{_spin(false);}}
 
 function psOnProfilePhoto(input){
   if(!input.files||!input.files[0]) return;
@@ -2420,6 +2424,7 @@ function _psPassMsg(msg,ok){
 // ── Correct Data ─────────────────────────────────────────────────────────────
 // Audits every active segment: recalculates currentStep via nextStep() and
 async function correctData(){
+  _spin(true,'Correcting data…'); try{
   const btn=document.getElementById('btnCorrectData');
   if(btn){btn.innerHTML='<span>⏳</span><span>Checking…</span>';btn.style.pointerEvents='none';}
   let fixedSegs=0, fixedTrips=0, fixedUsers=0, fixedLocs=0;
@@ -2600,7 +2605,7 @@ async function correctData(){
     notify(`✅ Corrected ${parts.join(' + ')} — saving to cloud…`);
   }
   if(total>0){updBadges();renderDash();renderDashTrips();renderKap();renderMR();renderApprove();renderMyTrips();}
-}
+}finally{_spin(false);}}
 // ===== PROCESS FLOW ENGINE =====
 /*
   Step Ownership Logic (per segment, based on sLoc/dLoc types):
@@ -3031,6 +3036,7 @@ function _openForcePassModal(){
   om('mForcePass');
 }
 async function _doForceChangePass(){
+  _spin(true,'Updating password…'); try{
   const newPwd=document.getElementById('forceNewPass').value;
   const confPwd=document.getElementById('forceConfPass').value;
   const msgEl=document.getElementById('forcePassMsg');
@@ -3053,7 +3059,7 @@ async function _doForceChangePass(){
   try{if(sessionStorage.getItem('kap_session_pass'))sessionStorage.setItem('kap_session_pass',newPwd);}catch(e){}
   cm('mForcePass');
   notify('🔐 Password updated successfully!');
-}
+}finally{_spin(false);}}
 function _forcePassSignOut(){
   cm('mForcePass');
   doLogout();
@@ -3062,6 +3068,7 @@ function _forcePassSignOut(){
 // ── Admin: Reset user password ───────────────────────────────────────────────
 const _RESET_PWD='Kappl@123';
 async function _resetUserPwd(userId){
+  _spin(true,'Resetting password…'); try{
   const u=byId(DB.users,userId);if(!u)return;
   if((u.roles||[]).includes('Super Admin')){notify('Cannot reset Super Admin password',true);return;}
   if(!confirm(`Reset password for "${u.fullName||u.name}" to "Kappl@123"?\n\nThe user will be forced to change password on next login.`)) return;
@@ -3072,7 +3079,7 @@ async function _resetUserPwd(userId){
   cm('mRecordDetail');
   if(typeof psRenderUsers==='function') try{psRenderUsers();}catch(e){}
   if(typeof renderUsers==='function') try{renderUsers();}catch(e){}
-}
+}finally{_spin(false);}}
 
 
 let _mobLogoutHideTimer=null;
@@ -4130,6 +4137,7 @@ function clearSpotForm(){
 }
 
 async function submitSpotEntry(){
+  _spin(true,'Saving spot entry…'); try{
   const vehNum=document.getElementById('spotVehNum').value.trim().toUpperCase();
   const driverMob=document.getElementById('spotDriverMob').value.trim();
   if(!vehNum){notify('Vehicle number is required',true);return;}
@@ -4179,7 +4187,7 @@ async function submitSpotEntry(){
   clearSpotForm();
   notify(`Spot vehicle entry ${spotId} recorded!`);
   renderSpotTab();renderDash();updBadges();
-}
+}finally{_spin(false);}}
 
 function cancelSpotEdit(){
   document.getElementById('spotEditId').value='';
@@ -4216,6 +4224,7 @@ function openSpotExitModal(spotId){
 }
 
 async function doSpotExitModal(){
+  _spin(true,'Processing exit…'); try{
   const spotId=document.getElementById('spotExitId').value;
   const exitPhoto=document.getElementById('spotExitPhotoFile')?._compressedData||'';
   if(!exitPhoto){modalErr('mSpotExit','Capture vehicle exit photo');return;}
@@ -4230,9 +4239,10 @@ async function doSpotExitModal(){
   cm('mSpotExit');
   notify(`${spotId} — vehicle exit recorded!`);
   renderSpotTab();renderDash();updBadges();
-}
+}finally{_spin(false);}}
 
 async function revokeSpotAction(spotId, action){
+  _spin(true,'Revoking…'); try{
   const s=(DB.spotTrips||[]).find(x=>x&&x.id===spotId);if(!s)return;
   const now=new Date();
   const hrs24=24*60*60*1000;
@@ -4251,7 +4261,7 @@ async function revokeSpotAction(spotId, action){
     notify(`Exit for ${spotId} revoked — vehicle marked as inside.`);
   }
   renderSpotTab();
-}
+}finally{_spin(false);}}
 
 function renderSpotHistory(){
   const list=document.getElementById('spotHistoryList');
@@ -4360,6 +4370,7 @@ function openSpotEdit(id){
   document.getElementById('kapSpotSection').scrollIntoView({behavior:'smooth',block:'start'});
 }
 async function saveSpotEdit(){
+  _spin(true,'Saving…'); try{
   const id=document.getElementById('seEditId').value;
   const s=(DB.spotTrips||[]).find(x=>x&&x.id===id);if(!s){modalErr('mSpotEdit','Entry not found');return;}
   const vn=document.getElementById('seVehNum').value.trim().toUpperCase();
@@ -4375,7 +4386,7 @@ async function saveSpotEdit(){
   s.entryRemarks=document.getElementById('seRemarks').value.trim();
   if(!await _dbSave('spotTrips',s)){ Object.assign(s,_sBak); return; }
   cm('mSpotEdit');renderSpotHistory();notify('Spot entry updated!');
-}
+}finally{_spin(false);}}
 function showConfirm(msg, onOk){
   document.getElementById('confirmMsg').textContent=msg||'This action cannot be undone.';
   document.getElementById('btnConfirmOk').onclick=()=>{cm('mConfirm');onOk();};
@@ -4383,12 +4394,13 @@ function showConfirm(msg, onOk){
 }
 
 async function deleteSpotEntry(id){
+  _spin(true,'Deleting…'); try{
   if(!CU||!CU.roles.includes('Super Admin')) return;
   showConfirm('Delete spot entry '+id+'? This cannot be undone.',async ()=>{
     if(!await _dbDel('spotTrips',id)) return;
     renderSpotTab();renderDash();updBadges();notify('Spot entry deleted.');
   });
-}
+}finally{_spin(false);}}
 
 function initHistDates(fromId, toId, grpId){
   const now=new Date();
@@ -4404,6 +4416,7 @@ function initHistDates(fromId, toId, grpId){
 }
 
 async function revokeKapStep(segId,stepNum){
+  _spin(true,'Revoking step…'); try{
   const seg=byId(DB.segments,segId);if(!seg)return;
   const st=seg.steps[stepNum];
   if(!st?.done)return;
@@ -4429,7 +4442,7 @@ async function revokeKapStep(segId,stepNum){
   if(_nextSegToSave) _dbSave('segments',_nextSegToSave).catch(e=>console.warn('revokeKapStep next seg save:',e));
   renderKap();renderDash();updBadges();
   notify(`Step ${stepNum===1?'Gate Exit':'Gate Entry'} revoked for ${segId}`);
-}
+}finally{_spin(false);}}
 
 function openInlineCam(sid){
   const picker=document.getElementById('thumbPicker_'+sid);if(picker)picker.style.display='none';
@@ -4511,6 +4524,7 @@ function clearInlinePhoto(sid){
   const clear=document.getElementById('thumbClear_'+sid);if(clear)clear.style.display='none';
 }
 async function doKapInline(segId,step){
+  _spin(true,'Processing…'); try{
   const sid=segId.replace(/-/g,'_');
   const seg=byId(DB.segments,segId);if(!seg)return;
   const trip=byId(DB.trips,seg.tripId);
@@ -4584,11 +4598,12 @@ async function doKapInline(segId,step){
     }
   }
   notify(step===1?"Gate Exit recorded!":step===5?"Empty Vehicle Exit recorded!":"Gate Entry recorded!");
-}
+}finally{_spin(false);}}
 
 
 
 async function doKapAction(){
+  _spin(true,'Processing gate action…'); try{
   const segId=document.getElementById('kapSegId').value;
   const step=parseInt(document.getElementById('kapStep').value);
   const seg=byId(DB.segments,segId);
@@ -4626,7 +4641,7 @@ async function doKapAction(){
   const _kapSec = document.getElementById('kapPreBookedSection');
   if(_kapSec) _kapSec.scrollIntoView({behavior:'smooth', block:'start'});
   notify(step===1?"Gate Exit recorded!":step===5?"Empty Vehicle Exit recorded!":"Gate Entry recorded!");
-}
+}finally{_spin(false);}}
 
 function clearTbPhoto(n){
   const thumb=document.getElementById('tbP'+n+'Thumb');
@@ -5370,12 +5385,13 @@ function togglePassSection(){
   if(ic)ic.textContent=open?'▲':'▼';
 }
 async function clearProfilePhoto(){
+  _spin(true,'Clearing photo…'); try{
   CU.photo='';
   const dbU=byId(DB.users,CU.id);
   if(dbU){ dbU.photo=''; await _dbSave('users',dbU); }
   const btn=document.getElementById('profilePhotoClearBtn');if(btn)btn.style.display='none';
   _refreshCurrentUserUI();
-}
+}finally{_spin(false);}}
 function showProfile(){
   const u=CU;
   if(!u)return;
@@ -5426,6 +5442,7 @@ function onProfilePhoto(input){
   r.readAsDataURL(f);
 }
 async function saveProfile(){
+  _spin(true,'Saving profile…'); try{
   const fullName=document.getElementById('profileFullName').value.trim();
   const mobile=document.getElementById('profileMobile').value.trim();
   const email=document.getElementById('profileEmail').value.trim();
@@ -5460,7 +5477,7 @@ async function saveProfile(){
   document.getElementById('profileOldPass').value='';document.getElementById('profileNewPass').value='';document.getElementById('profileConfPass').value='';
   _refreshCurrentUserUI();
   notify('Profile saved!');
-}
+}finally{_spin(false);}}
 
 // Update compact date button label to show dd-MMM-yy format
 function updDateBtnLbl(id){
@@ -5523,6 +5540,7 @@ async function deleteTrip(tripId){
 }
 
 async function confirmDeleteTrip(){
+  _spin(true,'Deleting trip…'); try{
   const tripId = document.getElementById('btnConfirmDelete').dataset.tripId;
   for(const s of DB.segments.filter(s=>s.tripId===tripId)){if(!await _dbDel('segments',s.id)) return;}
   for(const t of DB.trips.filter(t=>t.id===tripId)){if(!await _dbDel('trips',t.id)) return;}
@@ -5530,9 +5548,10 @@ async function confirmDeleteTrip(){
   notify(`Trip ${tripId} and all related segments deleted.`);
   renderDash();renderMyTrips();
   updBadges();
-}
+}finally{_spin(false);}}
 
 async function cancelTrip(tripId){
+  _spin(true,'Cancelling trip…'); try{
   const trip=byId(DB.trips,tripId);
   if(!trip) return;
   const segs=DB.segments.filter(s=>s.tripId===tripId);
@@ -5550,7 +5569,7 @@ async function cancelTrip(tripId){
   }
   notify('Trip '+tripId+' cancelled');
   renderMyTrips();renderDash();renderKap();updBadges();
-}
+}finally{_spin(false);}}
 
 // ===== TRIP BOOKING =====
 // ===== TRIP BOOKING PAGE TABS =====
@@ -6233,6 +6252,7 @@ async function bookTrip(){
   }
 }
 async function _doBookTrip(){
+  _spin(true,'Booking trip…'); try{
   const s=document.getElementById('tbStart').value;
   const d1=document.getElementById('tbDest1').value;
   const d2=document.getElementById('tbDest2').value;
@@ -6360,7 +6380,7 @@ async function _doBookTrip(){
   }
   notify(`Trip ${id} booked — ${pairs.length} segment(s) created!`);
   cm('mTripBooking');updBadges();renderDash();renderMyTrips();renderKap();renderMR();renderApprove();
-}
+}finally{_spin(false);}}
 
 // Helper: get trips for current user's plant location
 function tripsForMyPlant(){
@@ -6865,6 +6885,7 @@ function selectMrOption(sid, type, btnEl){
 }
 
 async function doMRInline(segId, receiptType){
+  _spin(true,'Saving receipt…'); try{
   const seg=byId(DB.segments,segId);if(!seg)return;
   const trip=byId(DB.trips,seg.tripId);
   // Check vehicle details
@@ -6897,7 +6918,7 @@ async function doMRInline(segId, receiptType){
   await advance(seg);if(!await _dbSave('segments',seg)) return;renderMR();updBadges();
   const msgs={received:'✅ Material receipt acknowledged!',not_received:'Material Not Received recorded.',discrepancy:'⚠ Receipt with discrepancy recorded.'};
   notify(msgs[receiptType]||'Material receipt acknowledged!');
-}
+}finally{_spin(false);}}
 function revokeMR(segId){
   const seg=byId(DB.segments,segId);
   if(!seg){notify('⚠ Segment not found: '+segId,true);return;}
@@ -6905,6 +6926,7 @@ function revokeMR(segId){
   om('mRevokeMR');
 }
 async function _doRevokeMR(){
+  _spin(true,'Revoking receipt…'); try{
   try{
     const segId=document.getElementById('revokeMRSegId').value;
     const seg=byId(DB.segments,segId);
@@ -6926,14 +6948,15 @@ async function _doRevokeMR(){
     notify('⚠ Error revoking: '+e.message,true);
     cm('mRevokeMR');
   }
-}
+}finally{_spin(false);}}
 async function doMR(){
+  _spin(true,'Saving receipt…'); try{
   const seg=byId(DB.segments,document.getElementById('mrSegId').value);
   const rem=(document.getElementById('mrRem')?.value||'').trim();
   seg.steps[3].done=true;seg.steps[3].time=new Date().toISOString();seg.steps[3].by=CU.id;
   if(rem)seg.steps[3].remarks=rem;
   await advance(seg);if(!await _dbSave('segments',seg)) return;cm('mMR');renderMR();updBadges();notify('Material receipt acknowledged!');
-}
+}finally{_spin(false);}}
 
 // ===== TRIP APPROVALS =====
 // ===== TRIP APPROVALS PAGE TABS =====
@@ -7358,6 +7381,7 @@ async function _doRevoke(){
   renderApprove();updBadges();
 }
 async function doApproval(action){
+  _spin(true,'Processing approval…'); try{
   try{
     const seg=byId(DB.segments,document.getElementById('appSegId').value);
     const rem=document.getElementById('appRem').value;
@@ -7371,9 +7395,10 @@ async function doApproval(action){
     }
     cm('mApprove');renderApprove();updBadges();
   }catch(e){ console.error('doApproval error:',e); notify('⚠ Approval error: '+e.message,true); }
-}
+}finally{_spin(false);}}
 
 async function doApprovalInline(segId, action){
+  _spin(true,'Processing…'); try{
   try{
     const seg=byId(DB.segments,segId);
     const rem=(document.getElementById('rem_'+segId)?.value||'').trim();
@@ -7387,10 +7412,11 @@ async function doApprovalInline(segId, action){
     }
     renderApprove();updBadges();renderDash();
   }catch(e){ console.error('doApprovalInline error:',e); notify('⚠ Approval error: '+e.message,true); }
-}
+}finally{_spin(false);}}
 
 
 async function acceptRejectedTrip(tripId){
+  _spin(true,'Accepting trip…'); try{
   const isSA=CU.roles.includes('Super Admin')||CU.roles.includes('Admin');
   if(!isSA){notify('⚠ Only Admin or Super Admin can accept a rejected trip.',true);return;}
   const rem=(document.getElementById('rem_rej_'+tripId)?.value||'').trim();
@@ -7409,7 +7435,7 @@ async function acceptRejectedTrip(tripId){
   }
   notify(`Trip ${tripId} accepted by admin override.`);
   renderApprove();updBadges();
-}
+}finally{_spin(false);}}
 async function doTripApprovalInline(tripId, action, receiptType){
   try{
   const tripSegs=DB.segments.filter(s=>s.tripId===tripId);
@@ -7580,6 +7606,7 @@ function updateRoleBox(input){
   label.style.borderColor=bc;
 }
 async function saveUser(){
+  _spin(true,'Saving user…'); try{
   const id=document.getElementById('eUid').value;
   const name=document.getElementById('uNameI').value.trim().toLowerCase().replace(/[\s!@#$%^&*()+=\[\]{};':"\\|,.<>\/?]/g,'');
   const pass=document.getElementById('uPass').value;
@@ -7645,7 +7672,7 @@ async function saveUser(){
   if(fromPortal) psRenderUsers(); else renderUsers();
   if(document.getElementById('psUserBody')) psRenderUsers();
   notify('Saved!');
-}
+}finally{_spin(false);}}
 
 // Vehicle Types
 function renderVTypes(){
@@ -7661,6 +7688,7 @@ function openVTModal(id){
   const vtICb=document.getElementById('vtInactive');if(vtICb)vtICb.checked=v?.inactive===true;om('mVT');
 }
 async function saveVT(){
+  _spin(true,'Saving vehicle type…'); try{
   const id=document.getElementById('eVTid').value;const name=document.getElementById('vtNameI').value.trim();const capacity=parseInt(document.getElementById('vtCap').value);
   if(!name||!capacity){modalErr('mVT','Fill all fields');return;}
   if(!id){
@@ -7676,7 +7704,7 @@ async function saveVT(){
   }
   else{const _vt={id:'vt'+uid(),name,capacity,inactive:vtInactive};if(!await _dbSave('vehicleTypes',_vt)) return;}
   cm('mVT');renderVTypes();notify('Saved!');
-}
+}finally{_spin(false);}}
 
 // Drivers
 function renderDrivers(){
@@ -7713,6 +7741,7 @@ function openDrvModal(id){
   document.getElementById('mDrvTitle').textContent=id?'Edit Driver':'Add Driver';om('mDriver');
 }
 async function saveDriver(){
+  _spin(true,'Saving driver…'); try{
   const id=document.getElementById('eDrvId').value;const name=document.getElementById('drvName').value.trim();const mobile=document.getElementById('drvMob').value;const dlExpiry=document.getElementById('drvDL').value;const vendorId=document.getElementById('drvVendorS').value;
   const photoData=document.getElementById('drvPhotoFile')?._data;
   if(!name){modalErr('mDriver','Name required');return;}if(mobile&&mobile.length!==10){modalErr('mDriver','Mobile must be 10 digits');return;}
@@ -7729,7 +7758,7 @@ async function saveDriver(){
   }
   else{const _d={id:'d'+uid(),name,mobile,dlExpiry,vendorId,photo:photoData||'',inactive};if(!await _dbSave('drivers',_d)) return;}
   cm('mDriver');renderDrivers();notify('Saved!');
-}
+}finally{_spin(false);}}
 function onDrvPhoto(input){
   const f=input.files[0];if(!f)return;
   const reader=new FileReader();
@@ -7772,6 +7801,7 @@ function openVndModal(id){
   document.getElementById('mVndTitle').textContent=id?'Edit Vendor':'Add Vendor';om('mVendor');
 }
 async function saveVendor(){
+  _spin(true,'Saving vendor…'); try{
   const id=document.getElementById('eVndId').value;const name=document.getElementById('vndName').value.trim();const owner=document.getElementById('vndOwner').value.trim();const contact=document.getElementById('vndContact').value;const address=document.getElementById('vndAddr').value;const userId=document.getElementById('vndUserS').value;
   if(!name||!owner){modalErr('mVendor','Fill required fields');return;}if(contact&&contact.length!==10){modalErr('mVendor','Contact must be 10 digits');return;}
   if(!id){
@@ -7789,7 +7819,7 @@ async function saveVendor(){
   }
   else{const _vn={id:'vn'+uid(),name,owner,contact,address,userId,inactive:vndInactive};if(!await _dbSave('vendors',_vn)) return;}
   cm('mVendor');renderVendors();notify('Saved!');
-}
+}finally{_spin(false);}}
 
 // Vehicles
 function renderVehicles(){
@@ -7873,6 +7903,7 @@ function fmtVehNum(el){
   el.value=out;
 }
 async function saveVehicle(){
+  _spin(true,'Saving vehicle…'); try{
   const id=document.getElementById('eVehId').value;
   const number=document.getElementById('vehNumI').value.trim().toUpperCase();
   const typeId=document.getElementById('vehTypeS').value;const vendorId=document.getElementById('vehVendorS').value;const pucExpiry=document.getElementById('vehPUC').value;const rtpExpiry=document.getElementById('vehRTP').value;const insExpiry=document.getElementById('vehIns').value;
@@ -7908,7 +7939,7 @@ async function saveVehicle(){
   }
   _vehFromTB=false;
   renderVehicles();
-}
+}finally{_spin(false);}}
 
 // Locations
 function renderLocations(){
@@ -7984,6 +8015,7 @@ function openLocModal(id){
   om('mLoc');
 }
 async function saveLoc(){
+  _spin(true,'Saving location…'); try{
   const id=document.getElementById('eLocId').value;const name=document.getElementById('locNameI').value.trim();const type=document.getElementById('locTypeS').value;const address=document.getElementById('locAddr').value;const geo=document.getElementById('locGeo').value;
   const colour=document.getElementById('locColour').value;
   const kapSec=document.getElementById('locKapSec').value;const tripBook=[...document.querySelectorAll('#locTripBook input:checked')].map(o=>o.value);
@@ -8004,7 +8036,7 @@ async function saveLoc(){
   }
   else{const _loc={id:'l'+uid(),name,type,address,geo,colour,kapSec,tripBook,matRecv,approvers,inactive:locInactive};if(!await _dbSave('locations',_loc)) return;}
     cm('mLoc');renderLocations();notify('Saved!');
-}
+}finally{_spin(false);}}
 
 // Trip Rates
 function renderRates(){
@@ -8411,6 +8443,7 @@ function autoRateEnd(){
   }
 }
 async function saveRate(){
+  _spin(true,'Saving rate…'); try{
   const existingId=document.getElementById('eRateId').value;
   const vTypeId=document.getElementById('rateVT').value;const start=document.getElementById('rateS').value;const dest1=document.getElementById('rateD1').value;
   const dest2=document.getElementById('rateD2').value;const dest3=document.getElementById('rateD3').value;const rate=parseInt(document.getElementById('rateAmt').value);
@@ -8456,7 +8489,7 @@ async function saveRate(){
     showRateSuggestions();
   }
   notify(isSA?'Rate saved and approved!':'Rate submitted for Super Admin approval.');
-}
+}finally{_spin(false);}}
 
 async function delRate(rateId){
   const r=byId(DB.tripRates,rateId);if(!r)return;
@@ -8975,7 +9008,13 @@ async function _applyUsersImportRows(rows){
 }
 
 function exportMaster(col){
-  if(!CU||!CU.roles.some(r=>['Super Admin','Admin'].includes(r))){notify('⚠ Export is restricted to Admin users only.',true);return;}
+  // Containers, invoices, users: Super Admin only
+  const _saOnlyCols=['hwmsContainers','hwmsInvoices','users'];
+  if(_saOnlyCols.includes(col)){
+    if(!CU||!CU.roles.includes('Super Admin')){notify('⚠ Export of '+col+' is restricted to Super Admin only.',true);return;}
+  } else {
+    if(!CU||!(CU.roles.some(r=>['Super Admin','Admin'].includes(r))||(CU.hwmsRoles||[]).some(r=>['Super Admin','HWMS Admin'].includes(r)))){notify('⚠ Export is restricted to Admin users only.',true);return;}
+  }
   const schema=MASTER_SCHEMA[col];
   if(!schema){notify('Export not supported for this master',true);return;}
   let objRows;
