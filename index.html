@@ -255,6 +255,7 @@ function doLogin(){
   // Always persist login to localStorage so re-opening the app doesn't require re-login
   try{ localStorage.setItem('kap_rm_user', u); localStorage.setItem('kap_rm_pass', p); }catch(e){}
   document.getElementById('loginError').style.display='none';
+  _spin(true,'Signing in…');
   document.getElementById('loginPage').style.display='none';
   showPortal();
 }

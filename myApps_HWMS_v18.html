@@ -123,7 +123,7 @@ tr.clickable-row{cursor:pointer;transition:background .15s}tr.clickable-row:hove
     </div>
   </div>
   <!-- My Apps button -->
-  <div class="nav-item" onclick="_navigateTo('myApps_VMS.html')" style="background:rgba(42,154,160,.06);border:1px solid rgba(42,154,160,.15);margin:8px 10px;border-radius:8px;font-weight:700;color:var(--accent)">🏠 My Apps</div>
+  <div class="nav-item" onclick="_navigateTo('myApps_VMS_v18.html')" style="background:rgba(42,154,160,.06);border:1px solid rgba(42,154,160,.15);margin:8px 10px;border-radius:8px;font-weight:700;color:var(--accent)">🏠 My Apps</div>
   <div class="nav-sec">OPERATIONS</div>
   <div class="nav-item" onclick="hwmsGo('pageHwmsContainers')">🚢 Containers</div>
   <div class="nav-item" onclick="hwmsGo('pageHwmsInvoices')">🧾 Invoices</div>
@@ -719,12 +719,12 @@ tr.clickable-row{cursor:pointer;transition:background .15s}tr.clickable-row:hove
 </div>
 
 <script async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="myApps_Common.js?v=18"></script>
+<script src="myApps_Common_v18.js"></script>
 <script>
 if(typeof _COMMON_LOADED==='undefined'){
   document.body.style.visibility='visible';
-  document.body.innerHTML='<div style="padding:40px;text-align:center;font-family:sans-serif;max-width:500px;margin:60px auto"><h2 style="color:#dc2626;margin-bottom:12px">⚠ Failed to load myApps_Common.js</h2><p style="color:#64748b;margin-bottom:16px;line-height:1.6">Make sure all 4 files are in the <b>same folder</b>:</p><div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;text-align:left;font-family:monospace;font-size:13px;line-height:2;color:#334155">📁 your-folder/<br>&nbsp;&nbsp;├── myApps_Common.js<br>&nbsp;&nbsp;├── myApps_Portal.html<br>&nbsp;&nbsp;├── myApps_VMS.html<br>&nbsp;&nbsp;└── myApps_HWMS.html</div></div>';
-  throw new Error('myApps_Common.js not loaded — all files must be in the same folder');
+  document.body.innerHTML='<div style="padding:40px;text-align:center;font-family:sans-serif;max-width:500px;margin:60px auto"><h2 style="color:#dc2626;margin-bottom:12px">⚠ Failed to load myApps_Common_v18.js</h2><p style="color:#64748b;margin-bottom:16px;line-height:1.6">Make sure all 4 files are in the <b>same folder</b>:</p><div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;text-align:left;font-family:monospace;font-size:13px;line-height:2;color:#334155">📁 your-folder/<br>&nbsp;&nbsp;├── myApps_Common_v18.js<br>&nbsp;&nbsp;├── myApps_Portal_v18.html<br>&nbsp;&nbsp;├── myApps_VMS_v18.html<br>&nbsp;&nbsp;└── myApps_HWMS_v18.html</div></div>';
+  throw new Error('myApps_Common_v18.js not loaded — all files must be in the same folder');
 }
 // ── HWMS Navigation ─────────────────────────────────────────────────────────
 // Helper: check if current user is Super Admin (via VMS roles OR HWMS roles)
@@ -799,17 +799,17 @@ async function _hwmsBoot(){
     }
   }
   // No session — redirect to portal
-  _navigateTo('myApps_Portal.html');
+  _navigateTo('myApps_Portal_v18.html');
 }
 // Safety: redirect to portal if boot hangs
 let _hwmsBootDone=false;
-setTimeout(()=>{if(!_hwmsBootDone){console.warn('HWMS: safety timeout');const sp=document.getElementById('dbSplash');if(sp)sp.style.display='none';_navigateTo('myApps_Portal.html');}},12000);
+setTimeout(()=>{if(!_hwmsBootDone){console.warn('HWMS: safety timeout');const sp=document.getElementById('dbSplash');if(sp)sp.style.display='none';_navigateTo('myApps_Portal_v18.html');}},12000);
 
 // Boot — MUST wait for window.load so async Supabase CDN is ready
 window.addEventListener('load', ()=>{
   _hwmsBoot().then(()=>{_hwmsBootDone=true;}).catch(e=>{
     console.error('HWMS boot failed:',e);
-    _navigateTo('myApps_Portal.html');
+    _navigateTo('myApps_Portal_v18.html');
   });
 });
 
@@ -818,7 +818,7 @@ function hwmsLogout(){
   _sessionDel('kap_session_user');
   _sessionDel('kap_session_pass');
   try{localStorage.removeItem('kap_rm_user');localStorage.removeItem('kap_rm_pass');}catch(e){}
-  _navigateTo('myApps_Portal.html');
+  _navigateTo('myApps_Portal_v18.html');
 }
 
 // ═══ HWMS FUNCTIONS ═════════════════════════════════════════════════════════
@@ -843,6 +843,7 @@ function openHwmsCarrierModal(id){
   om('mHwmsCarrier');
 }
 async function saveHwmsCarrier(){
+  _spin(true,'Saving carrier…'); try{
   const id=document.getElementById('eHwmsCarrierId').value;
   const carrierName=document.getElementById('hwmsCarrierName').value.trim();
   if(!carrierName){modalErr('mHwmsCarrier','Carrier Name is required');return;}
@@ -852,7 +853,7 @@ async function saveHwmsCarrier(){
   if(id){const c=byId(DB.hwmsCarriers,id);const bak={...c};Object.assign(c,data);if(!await _dbSave('hwmsCarriers',c)){Object.assign(c,bak);return;}}
   else{const c={id:'hcr'+uid(),...data};if(!await _dbSave('hwmsCarriers',c))return;}
   cm('mHwmsCarrier');renderHwmsCarriers();notify('Carrier saved!');
-}
+}finally{_spin(false);}}
 
 // ===== HWMS: COMPANY DETAILS =====
 function _getHwmsCompany(){return (DB.hwmsCompany||[])[0]||null;}
@@ -869,6 +870,7 @@ function renderHwmsCompany(){
   document.getElementById('hwmsCoNote').value=c?.note||'';
 }
 async function saveHwmsCompany(){
+  _spin(true,'Saving company…'); try{
   const companyName=document.getElementById('hwmsCoName').value.trim();
   if(!companyName){notify('Company Name is required',true);return;}
   const data={companyName,address:document.getElementById('hwmsCoAddr').value.trim(),gstin:document.getElementById('hwmsCoGstin').value.trim(),iec:document.getElementById('hwmsCoIec').value.trim(),rex:document.getElementById('hwmsCoRex').value.trim(),supplierCode:document.getElementById('hwmsCoSupplier').value.trim(),placeReceipt:document.getElementById('hwmsCoPlaceReceipt').value.trim(),country:document.getElementById('hwmsCoCountry').value.trim()||'India',note:document.getElementById('hwmsCoNote').value.trim()};
@@ -877,7 +879,7 @@ async function saveHwmsCompany(){
   if(existing){const bak={...existing};Object.assign(existing,data);if(!await _dbSave('hwmsCompany',existing)){Object.assign(existing,bak);return;}}
   else{const rec={id:'hco'+uid(),...data};if(!await _dbSave('hwmsCompany',rec))return;}
   notify('Company details saved!');
-}
+}finally{_spin(false);}}
 
 // ===== HWMS: HSN MASTER =====
 function renderHwmsHsn(){
@@ -898,6 +900,7 @@ function openHwmsHsnModal(id){
   om('mHwmsHsn');
 }
 async function saveHwmsHsn(){
+  _spin(true,'Saving HSN…'); try{
   const id=document.getElementById('eHwmsHsnId').value;
   const hsnNumber=document.getElementById('hwmsHsnNum').value.trim();
   const description=document.getElementById('hwmsHsnDesc').value.trim();
@@ -907,7 +910,7 @@ async function saveHwmsHsn(){
   if(id){const h=byId(DB.hwmsHsn,id);const bak={...h};Object.assign(h,{hsnNumber,description});if(!await _dbSave('hwmsHsn',h)){Object.assign(h,bak);return;}}
   else{const h={id:'hh'+uid(),hsnNumber,description};if(!await _dbSave('hwmsHsn',h))return;}
   cm('mHwmsHsn');renderHwmsHsn();notify('HSN saved!');
-}
+}finally{_spin(false);}}
 
 // ===== HWMS: UOM MASTER =====
 function renderHwmsUom(){
@@ -928,6 +931,7 @@ function openHwmsUomModal(id){
   om('mHwmsUom');
 }
 async function saveHwmsUom(){
+  _spin(true,'Saving UOM…'); try{
   const id=document.getElementById('eHwmsUomId').value;
   const uom=document.getElementById('hwmsUomVal').value.trim();
   const description=document.getElementById('hwmsUomDesc').value.trim();
@@ -937,7 +941,7 @@ async function saveHwmsUom(){
   if(id){const u=byId(DB.hwmsUom,id);const bak={...u};Object.assign(u,{uom,description});if(!await _dbSave('hwmsUom',u)){Object.assign(u,bak);return;}}
   else{const u={id:'hu'+uid(),uom,description};if(!await _dbSave('hwmsUom',u))return;}
   cm('mHwmsUom');renderHwmsUom();notify('UOM saved!');
-}
+}finally{_spin(false);}}
 
 // ===== HWMS: PACKAGING MASTER =====
 function renderHwmsPacking(){
@@ -958,6 +962,7 @@ function openHwmsPackingModal(id){
   om('mHwmsPacking');
 }
 async function saveHwmsPacking(){
+  _spin(true,'Saving packaging…'); try{
   const id=document.getElementById('eHwmsPackingId').value;
   const name=document.getElementById('hwmsPackingName').value.trim();
   const description=document.getElementById('hwmsPackingDesc').value.trim();
@@ -967,7 +972,7 @@ async function saveHwmsPacking(){
   if(id){const pk=byId(DB.hwmsPacking,id);const bak={...pk};Object.assign(pk,{name,description});if(!await _dbSave('hwmsPacking',pk)){Object.assign(pk,bak);return;}}
   else{const pk={id:'hpk'+uid(),name,description};if(!await _dbSave('hwmsPacking',pk))return;}
   cm('mHwmsPacking');renderHwmsPacking();notify('Packaging saved!');
-}
+}finally{_spin(false);}}
 
 // ===== HWMS: CUSTOMER MASTER =====
 function renderHwmsCustomers(){
@@ -1035,6 +1040,7 @@ function openHwmsCustModal(id){
   om('mHwmsCust');
 }
 async function saveHwmsCust(){
+  _spin(true,'Saving customer…'); try{
   const id=document.getElementById('eHwmsCustId').value;
   const customerName=document.getElementById('hwmsCustName').value.trim();
   if(!customerName){modalErr('mHwmsCust','Customer Name is required');return;}
@@ -1045,7 +1051,7 @@ async function saveHwmsCust(){
   if(id){const c=byId(DB.hwmsCustomers,id);const bak={...c};Object.assign(c,data);if(!await _dbSave('hwmsCustomers',c)){Object.assign(c,bak);return;}}
   else{const c={id:'hcu'+uid(),...data};if(!await _dbSave('hwmsCustomers',c))return;}
   cm('mHwmsCust');renderHwmsCustomers();notify('Customer saved!');
-}
+}finally{_spin(false);}}
 
 // ===== HWMS: PORT OF DISCHARGE =====
 function renderHwmsPortDisch(){
@@ -1065,6 +1071,7 @@ function openHwmsPortDischModal(id){
   om('mHwmsPortDisch');
 }
 async function saveHwmsPortDisch(){
+  _spin(true,'Saving port…'); try{
   const id=document.getElementById('eHwmsPortDischId').value;
   const name=document.getElementById('hwmsPortDischName').value.trim();
   if(!name){modalErr('mHwmsPortDisch','Port Name is required');return;}
@@ -1074,7 +1081,7 @@ async function saveHwmsPortDisch(){
   if(id){const p=byId(DB.hwmsPortDischarge,id);const bak={...p};Object.assign(p,data);if(!await _dbSave('hwmsPortDischarge',p)){Object.assign(p,bak);return;}}
   else{const p={id:'hpd'+uid(),...data};if(!await _dbSave('hwmsPortDischarge',p))return;}
   cm('mHwmsPortDisch');renderHwmsPortDisch();notify('Port saved!');
-}
+}finally{_spin(false);}}
 
 // ===== HWMS: PORT OF LOADING =====
 function renderHwmsPortLoad(){
@@ -1094,6 +1101,7 @@ function openHwmsPortLoadModal(id){
   om('mHwmsPortLoad');
 }
 async function saveHwmsPortLoad(){
+  _spin(true,'Saving port…'); try{
   const id=document.getElementById('eHwmsPortLoadId').value;
   const name=document.getElementById('hwmsPortLoadName').value.trim();
   if(!name){modalErr('mHwmsPortLoad','Port Name is required');return;}
@@ -1103,7 +1111,7 @@ async function saveHwmsPortLoad(){
   if(id){const p=byId(DB.hwmsPortLoading,id);const bak={...p};Object.assign(p,data);if(!await _dbSave('hwmsPortLoading',p)){Object.assign(p,bak);return;}}
   else{const p={id:'hpl'+uid(),...data};if(!await _dbSave('hwmsPortLoading',p))return;}
   cm('mHwmsPortLoad');renderHwmsPortLoad();notify('Port saved!');
-}
+}finally{_spin(false);}}
 
 // ===== HWMS: PART MASTER =====
 function showHwmsPartDetail(id){
@@ -1433,6 +1441,7 @@ function openHwmsPartModal(id){
   om('mHwmsPart');
 }
 async function saveHwmsPart(){
+  _spin(true,'Saving part…'); try{
   const id=document.getElementById('eHwmsPartId').value;
   const partNumber=document.getElementById('hwmsPartNum').value.trim();
   const partRevision=document.getElementById('hwmsPartRev').value.trim();
@@ -1471,11 +1480,12 @@ async function saveHwmsPart(){
   else{const p={id:'hp'+uid(),...data};if(!await _dbSave('hwmsParts',p))return;}
   cm('mHwmsPart');renderHwmsParts();notify('Part saved!');
   if(typeof _hwmsLiRenderTable==='function'&&_hwmsLiItems&&_hwmsLiItems.length) _hwmsLiRenderTable();
-}
+}finally{_spin(false);}}
 
 // ===== HWMS: CONTAINER MASTER =====
 // ===== HWMS: CONFIRM INVOICE (RFD) =====
 async function _hwmsConfirmInv(id){
+  _spin(true,'Confirming invoice…'); try{
   const inv=byId(DB.hwmsInvoices||[],id);if(!inv)return;
   if(inv.confirmed){notify('Already confirmed',true);return;}
   const errors=[];
@@ -1515,9 +1525,10 @@ async function _hwmsConfirmInv(id){
   const bak={...inv};inv.confirmed=true;
   if(!await _dbSave('hwmsInvoices',inv)){Object.assign(inv,bak);return;}
   renderHwmsInvoices();notify('✅ Invoice '+inv.invoiceNumber+' confirmed as RFD');
-}
+}finally{_spin(false);}}
 
 async function _hwmsRevokeInv(id){
+  _spin(true,'Revoking invoice…'); try{
   const inv=byId(DB.hwmsInvoices||[],id);if(!inv)return;
   if(!inv.confirmed){notify('Not confirmed',true);return;}
   const cont=inv.containerId?byId(DB.hwmsContainers||[],inv.containerId):null;
@@ -1526,7 +1537,7 @@ async function _hwmsRevokeInv(id){
   const bak={...inv};inv.confirmed=false;
   if(!await _dbSave('hwmsInvoices',inv)){Object.assign(inv,bak);return;}
   renderHwmsInvoices();notify('Invoice '+inv.invoiceNumber+' revoked to Draft');
-}
+}finally{_spin(false);}}
 
 
 
@@ -1695,6 +1706,7 @@ function _hwmsContUpdateDelBtn(){
   if(selAll) selAll.checked=all.length>0&&count===all.length;
 }
 async function _hwmsContDeleteSelected(){
+  _spin(true,'Deleting containers…'); try{
   var checked=[...document.querySelectorAll('.hwmsContChk:checked')];
   if(!checked.length){notify('No containers selected',true);return;}
   var isAdmin=_hwmsIsAdmin();
@@ -1731,7 +1743,7 @@ async function _hwmsContDeleteSelected(){
   renderHwmsContainers();updBadges();
   if(failed>0) notify('✅ Deleted '+deleted+', ⚠ Failed '+failed,true);
   else notify('✅ Deleted '+deleted+' container'+(deleted>1?'s':''));
-}
+}finally{_spin(false);}}
 // Track pre-save linked invoices for new containers
 var _hwmsContPreSaveInvIds=[];
 var _hwmsContIsNew=false;
@@ -1942,6 +1954,7 @@ function _hwmsContRenderLinkedInvs(contId){
 }
 
 async function _hwmsContAddInv(){
+  _spin(true,'Adding invoice…'); try{
   const contId=document.getElementById('eHwmsContId').value;
   const invId=document.getElementById('hwmsContAddInvSel').value;
   if(!invId){notify('Select an invoice to add',true);return;}
@@ -1961,9 +1974,10 @@ async function _hwmsContAddInv(){
   _hwmsContRenderLinkedInvs(contId);
   renderHwmsInvoices();
   notify('Invoice '+inv.invoiceNumber+' added to container');
-}
+}finally{_spin(false);}}
 
 async function _hwmsContRemoveInv(invId){
+  _spin(true,'Removing invoice…'); try{
   const contId=document.getElementById('eHwmsContId').value;
   const inv=byId(DB.hwmsInvoices||[],invId);if(!inv)return;
   if(!confirm('Remove invoice '+inv.invoiceNumber+' from this container?'))return;
@@ -1981,7 +1995,7 @@ async function _hwmsContRemoveInv(invId){
   _hwmsContRenderLinkedInvs(contId);
   renderHwmsInvoices();
   notify('Invoice '+inv.invoiceNumber+' removed');
-}
+}finally{_spin(false);}}
 
 function _hwmsContFilePreview(input,previewId){
   const prev=document.getElementById(previewId);
@@ -2013,6 +2027,7 @@ function _hwmsContShowPreview(data,previewId){
 }
 
 async function _hwmsContDispatch(){
+  _spin(true,'Dispatching…'); try{
   const id=document.getElementById('eHwmsContId').value;
   if(!id){notify('Save the container first before dispatching',true);return;}
   const c=byId(DB.hwmsContainers||[],id);if(!c)return;
@@ -2080,9 +2095,10 @@ async function _hwmsContDispatch(){
   renderHwmsContainers();renderHwmsInvoices();
   _hwmsContSyncAllDates();
   notify('🚢 Container '+c.containerNumber+' dispatched! Status: In Transit');
-}
+}finally{_spin(false);}}
 
 async function _hwmsContUndoDispatch(){
+  _spin(true,'Undoing dispatch…'); try{
   const id=document.getElementById('eHwmsContId').value;
   if(!id){notify('No container selected',true);return;}
   const c=byId(DB.hwmsContainers||[],id);if(!c)return;
@@ -2123,9 +2139,10 @@ async function _hwmsContUndoDispatch(){
   renderHwmsContainers();renderHwmsInvoices();
   _hwmsContSyncAllDates();
   notify('↩ Container '+c.containerNumber+' dispatch undone');
-}
+}finally{_spin(false);}}
 
 async function _hwmsContReached(){
+  _spin(true,'Updating status…'); try{
   const id=document.getElementById('eHwmsContId').value;
   if(!id){notify('No container selected',true);return;}
   const c=byId(DB.hwmsContainers||[],id);if(!c)return;
@@ -2147,7 +2164,7 @@ async function _hwmsContReached(){
   renderHwmsContainers();renderHwmsInvoices();
   _hwmsContSyncAllDates();
   notify('📍 Container '+c.containerNumber+' reached the Warehouse!');
-}
+}finally{_spin(false);}}
 
 function _hwmsContUpdateReachedUI(c){
   const isReached=c?.status==='Reached';
@@ -2189,6 +2206,7 @@ function _hwmsContUpdateReachedUI(c){
 }
 
 async function _hwmsContRevokeReached(){
+  _spin(true,'Revoking status…'); try{
   if(!CU||!_hwmsIsAdmin()){notify('Only Super Admin or HWMS Admin can revoke reached status',true);return;}
   const id=document.getElementById('eHwmsContId').value;
   if(!id){notify('No container selected',true);return;}
@@ -2216,7 +2234,7 @@ async function _hwmsContRevokeReached(){
   renderHwmsContainers();renderHwmsInvoices();
   _hwmsContSyncAllDates();
   notify('↩ Container '+c.containerNumber+' reverted to In Transit');
-}
+}finally{_spin(false);}}
 
 // Cancel container modal — delink any pre-save linked invoices
 function _hwmsContCancel(){
@@ -2231,6 +2249,7 @@ function _hwmsContCancel(){
 }
 
 async function saveHwmsCont(){
+  _spin(true,'Saving container…'); try{
   const id=document.getElementById('eHwmsContId').value;
   const suffix=document.getElementById('hwmsContNum').value.trim();
   if(!suffix){modalErr('mHwmsCont','Container Number required');return;}
@@ -2292,7 +2311,7 @@ async function saveHwmsCont(){
   cm('mHwmsCont');
   renderHwmsContainers();renderHwmsInvoices();
   notify('Container saved!');
-}
+}finally{_spin(false);}}
 
 // ===== HWMS: INVOICE MASTER =====
 // Sort state for invoices
@@ -2451,6 +2470,7 @@ function _hwmsInvUpdateDelBtn(){
   if(selAll) selAll.checked=all.length>0&&count===all.length;
 }
 async function _hwmsInvDeleteSelected(){
+  _spin(true,'Deleting invoices…'); try{
   var checked=[...document.querySelectorAll('.hwmsInvChk:checked')];
   if(!checked.length){notify('No invoices selected',true);return;}
   var isAdmin=_hwmsIsAdmin();
@@ -2500,7 +2520,7 @@ async function _hwmsInvDeleteSelected(){
   } else {
     notify('✅ Deleted '+deleted+' invoice'+(deleted>1?'s':''));
   }
-}
+}finally{_spin(false);}}
 // ===== HWMS: INVOICE DETAIL POPUP =====
 function showHwmsInvDetail(id){
   const inv=byId(DB.hwmsInvoices||[],id);if(!inv)return;
@@ -3593,6 +3613,7 @@ function _hwmsInvHighlightIncomplete(){
 }
 
 async function saveHwmsInv(){
+  _spin(true,'Saving invoice…'); try{
   const id=document.getElementById('eHwmsInvId').value;
   const date=document.getElementById('hwmsInvDate').value;
   if(!date){modalErr('mHwmsInv','Date is required');return;}
@@ -3638,7 +3659,7 @@ async function saveHwmsInv(){
   renderHwmsInvoices();
   showHwmsInvDetail(savedId);
   notify('Invoice saved!');
-}
+}finally{_spin(false);}}
 
 
 function _hwmsContDateFmt(id){

@@ -1107,8 +1107,8 @@
 <script>
 if(typeof _COMMON_LOADED==='undefined'){
   document.body.style.display='';
-  document.body.innerHTML='<div style="padding:40px;text-align:center;font-family:sans-serif;max-width:500px;margin:60px auto"><h2 style="color:#dc2626">⚠ Failed to load myApps_Common.js</h2><p style="color:#64748b">Make sure all files are in the same folder.</p></div>';
-  throw new Error('myApps_Common.js not loaded');
+  document.body.innerHTML='<div style="padding:40px;text-align:center;font-family:sans-serif;max-width:500px;margin:60px auto"><h2 style="color:#dc2626">⚠ Failed to load myApps_Common_v18.js</h2><p style="color:#64748b">Make sure all files are in the same folder.</p></div>';
+  throw new Error('myApps_Common_v18.js not loaded');
 }
 
 // ═══ SECURITY MODULE NAVIGATION ═══
@@ -1774,6 +1774,7 @@ function clearSpotForm(){
 }
 
 async function submitSpotEntry(){
+  _spin(true,'Saving spot entry…'); try{
   const vehNum=document.getElementById('spotVehNum').value.trim().toUpperCase();
   const driverMob=document.getElementById('spotDriverMob').value.trim();
   if(!vehNum){notify('Vehicle number is required',true);return;}
@@ -1823,7 +1824,7 @@ async function submitSpotEntry(){
   clearSpotForm();
   notify(`Spot vehicle entry ${spotId} recorded!`);
   renderSpotTab();renderDash();updBadges();
-}
+}finally{_spin(false);}}
 
 function cancelSpotEdit(){
   document.getElementById('spotEditId').value='';
@@ -1860,6 +1861,7 @@ function openSpotExitModal(spotId){
 }
 
 async function doSpotExitModal(){
+  _spin(true,'Processing exit…'); try{
   const spotId=document.getElementById('spotExitId').value;
   const exitPhoto=document.getElementById('spotExitPhotoFile')?._compressedData||'';
   if(!exitPhoto){modalErr('mSpotExit','Capture vehicle exit photo');return;}
@@ -1874,9 +1876,10 @@ async function doSpotExitModal(){
   cm('mSpotExit');
   notify(`${spotId} — vehicle exit recorded!`);
   renderSpotTab();renderDash();updBadges();
-}
+}finally{_spin(false);}}
 
 async function revokeSpotAction(spotId, action){
+  _spin(true,'Revoking…'); try{
   const s=(DB.spotTrips||[]).find(x=>x&&x.id===spotId);if(!s)return;
   const now=new Date();
   const hrs24=24*60*60*1000;
@@ -1895,7 +1898,7 @@ async function revokeSpotAction(spotId, action){
     notify(`Exit for ${spotId} revoked — vehicle marked as inside.`);
   }
   renderSpotTab();
-}
+}finally{_spin(false);}}
 
 function renderSpotHistory(){
   const list=document.getElementById('spotHistoryList');
@@ -2004,6 +2007,7 @@ function openSpotEdit(id){
   document.getElementById('kapSpotSection').scrollIntoView({behavior:'smooth',block:'start'});
 }
 async function saveSpotEdit(){
+  _spin(true,'Saving…'); try{
   const id=document.getElementById('seEditId').value;
   const s=(DB.spotTrips||[]).find(x=>x&&x.id===id);if(!s){modalErr('mSpotEdit','Entry not found');return;}
   const vn=document.getElementById('seVehNum').value.trim().toUpperCase();
@@ -2019,7 +2023,7 @@ async function saveSpotEdit(){
   s.entryRemarks=document.getElementById('seRemarks').value.trim();
   if(!await _dbSave('spotTrips',s)){ Object.assign(s,_sBak); return; }
   cm('mSpotEdit');renderSpotHistory();notify('Spot entry updated!');
-}
+}finally{_spin(false);}}
 function showConfirm(msg, onOk){
   document.getElementById('confirmMsg').textContent=msg||'This action cannot be undone.';
   document.getElementById('btnConfirmOk').onclick=()=>{cm('mConfirm');onOk();};
@@ -2027,12 +2031,13 @@ function showConfirm(msg, onOk){
 }
 
 async function deleteSpotEntry(id){
+  _spin(true,'Deleting…'); try{
   if(!CU||!CU.roles.includes('Super Admin')) return;
   showConfirm('Delete spot entry '+id+'? This cannot be undone.',async ()=>{
     if(!await _dbDel('spotTrips',id)) return;
     renderSpotTab();renderDash();updBadges();notify('Spot entry deleted.');
   });
-}
+}finally{_spin(false);}}
 
 function initHistDates(fromId, toId, grpId){
   const now=new Date();
@@ -2048,6 +2053,7 @@ function initHistDates(fromId, toId, grpId){
 }
 
 async function revokeKapStep(segId,stepNum){
+  _spin(true,'Revoking step…'); try{
   const seg=byId(DB.segments,segId);if(!seg)return;
   const st=seg.steps[stepNum];
   if(!st?.done)return;
@@ -2073,7 +2079,7 @@ async function revokeKapStep(segId,stepNum){
   if(_nextSegToSave) _dbSave('segments',_nextSegToSave).catch(e=>console.warn('revokeKapStep next seg save:',e));
   renderKap();renderDash();updBadges();
   notify(`Step ${stepNum===1?'Gate Exit':'Gate Entry'} revoked for ${segId}`);
-}
+}finally{_spin(false);}}
 
 function openInlineCam(sid){
   const picker=document.getElementById('thumbPicker_'+sid);if(picker)picker.style.display='none';
@@ -2155,6 +2161,7 @@ function clearInlinePhoto(sid){
   const clear=document.getElementById('thumbClear_'+sid);if(clear)clear.style.display='none';
 }
 async function doKapInline(segId,step){
+  _spin(true,'Processing…'); try{
   const sid=segId.replace(/-/g,'_');
   const seg=byId(DB.segments,segId);if(!seg)return;
   const trip=byId(DB.trips,seg.tripId);
@@ -2228,11 +2235,12 @@ async function doKapInline(segId,step){
     }
   }
   notify(step===1?"Gate Exit recorded!":step===5?"Empty Vehicle Exit recorded!":"Gate Entry recorded!");
-}
+}finally{_spin(false);}}
 
 
 
 async function doKapAction(){
+  _spin(true,'Processing gate action…'); try{
   const segId=document.getElementById('kapSegId').value;
   const step=parseInt(document.getElementById('kapStep').value);
   const seg=byId(DB.segments,segId);
@@ -2270,7 +2278,7 @@ async function doKapAction(){
   const _kapSec = document.getElementById('kapPreBookedSection');
   if(_kapSec) _kapSec.scrollIntoView({behavior:'smooth', block:'start'});
   notify(step===1?"Gate Exit recorded!":step===5?"Empty Vehicle Exit recorded!":"Gate Entry recorded!");
-}
+}finally{_spin(false);}}
 
 function clearTbPhoto(n){
   const thumb=document.getElementById('tbP'+n+'Thumb');
@@ -2347,6 +2355,7 @@ function openCPModal(id,preLocId){
   om('mCheckpoint');
 }
 async function saveCP(){
+  _spin(true,'Saving checkpoint…'); try{
   const id=document.getElementById('eCPid').value;
   const locId=document.getElementById('cpLocS').value;
   const name=document.getElementById('cpNameI').value.trim();
@@ -2368,7 +2377,7 @@ async function saveCP(){
     if(!await _dbSave('checkpoints',cp)) return;
   }
   cm('mCheckpoint');renderCheckpoints();notify('Checkpoint saved!');
-}
+}finally{_spin(false);}}
 
 // ===== SECURITY GUARD MASTER =====
 function _populateGuardLocDropdown(selId,curVal){
@@ -2445,6 +2454,7 @@ function openGuardModal(id){
   om('mGuard');
 }
 async function saveGuard(){
+  _spin(true,'Saving guard…'); try{
   const id=document.getElementById('eGuardId').value;
   const name=document.getElementById('guardNameI').value.trim();
   const mobile=document.getElementById('guardMobI').value.trim();
@@ -2469,7 +2479,7 @@ async function saveGuard(){
     if(!await _dbSave('guards',g)) return;
   }
   cm('mGuard');renderGuards();notify('Guard saved!');
-}
+}finally{_spin(false);}}
 
 // ===== SECURITY ROUND SCHEDULE MASTER =====
 function _populateRSLocFilter(){
@@ -2558,6 +2568,7 @@ function openRSModal(id){
   om('mRoundSchedule');
 }
 async function saveRS(){
+  _spin(true,'Saving schedule…'); try{
   const id=document.getElementById('eRSid').value;
   const name=document.getElementById('rsNameI').value.trim();
   const locId=document.getElementById('rsLocS').value;
@@ -2580,7 +2591,7 @@ async function saveRS(){
     if(!await _dbSave('roundSchedules',rs)) return;
   }
   cm('mRoundSchedule');renderRoundSchedules();notify('Schedule saved!');
-}
+}finally{_spin(false);}}
 
 // ═══ SECURITY BOOT ═══
 async function _secBoot(){
