@@ -1,0 +1,2635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Permissions-Policy" content="camera=*, microphone=*">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<title>KAP — VMS</title>
+
+<!-- xlsx removed for Claude app compatibility -->
+<!-- Local mode: no external dependencies -->
+<style>
+  :root {
+    --bg:#f0f4f8; --surface:#ffffff; --surface2:#f0f4f8; --border:#dde3ed; --border2:#c8d1e0;
+    --accent:#2a9aa0; --accent2:#1d6f73; --text:#1a2033; --text2:#4a5578; --text3:#8a93a8;
+    --green:#22c55e; --red:#ef4444; --blue:#35b0b6; --purple:#8b5cf6; --teal:#14b8a6;
+    --mono:monospace; --sans:sans-serif; --radius:10px; --shadow:0 4px 24px rgba(0,0,0,.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;min-height:-webkit-fill-available}
+  body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;height:-webkit-fill-available;overflow:hidden;-webkit-text-size-adjust:100%;touch-action:manipulation}
+  #loginPage{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f0f0f0}
+  .login-card{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:48px 40px;width:360px;box-shadow:var(--shadow);animation:loginFadeIn .4s ease-out}
+  @keyframes loginFadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  .login-logo{margin-bottom:8px;text-align:center}
+  .login-title{font-size:26px;font-weight:700;margin-bottom:6px}
+  .login-sub{font-size:14px;color:var(--text2);margin-bottom:36px}
+  .form-group{margin-bottom:20px}
+  label{display:block;font-size:12px;font-weight:600;color:#000;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+  #mTripBooking label{font-weight:800;color:#000}
+  input,select,textarea{width:100%;background:#fffbea;border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;color:var(--text);font-family:var(--sans);font-size:14px;outline:none;transition:border-color .2s}
+  input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+  select option{background:var(--surface);color:var(--text)}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:var(--radius);font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s ease}
+  .btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:var(--accent2)}
+  .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border2)}.btn-secondary:hover{border-color:var(--accent)}
+  .btn-danger{background:var(--red);color:#fff}
+  .btn-green{background:var(--green);color:#000}
+  .btn-full{width:100%;justify-content:center;padding:12px}
+  .error-msg{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:#dc2626;font-size:13px;padding:10px 14px;border-radius:8px;margin-bottom:16px;display:none}
+  .input-error{border:2px solid #dc2626!important;background:rgba(239,68,68,.05)!important}
+  #app{display:none;height:100vh;overflow:hidden}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;width:240px;background:var(--surface);border-right:1px solid var(--border);box-shadow:2px 0 12px rgba(0,0,0,.06);display:flex;flex-direction:column;z-index:160;transform:translateX(0);transition:transform .25s cubic-bezier(.4,0,.2,1)}
+  .sidebar.nav-hidden{transform:translateX(-260px)}
+  .sidebar.nav-open{transform:translateX(0);box-shadow:8px 0 40px rgba(0,0,0,.15)}
+  .sidebar-logo{padding:8px 14px 6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+  .sidebar-logo img{width:38px;height:38px;object-fit:contain;border-radius:4px;flex-shrink:0}
+  .sidebar-logo .logo-text{flex:1;min-width:0}
+  .sidebar-logo h2{font-size:11px;font-weight:700;margin:0;color:var(--text);line-height:1.3}
+  .sidebar-nav{flex:1;padding:4px 10px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .nav-section{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:2px;text-transform:uppercase;padding:4px 8px 2px;margin-top:6px}
+  .nav-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .2s ease;margin-bottom:1px}
+  .nav-item:hover{background:var(--surface2);color:var(--text)}
+  .nav-item.active{background:rgba(42,154,160,.12);color:var(--accent)}
+  .nav-label{flex:1}
+  .nav-count{margin-left:auto;background:rgba(22,163,74,.12);color:#16a34a;font-size:11px;font-weight:700;padding:2px 7px;border-radius:10px;font-family:var(--mono)}
+  .nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;padding:2px 6px;border-radius:10px;font-weight:700;display:none}
+  .nav-icon{font-size:15px;width:18px;text-align:center}
+  .sidebar-user{padding:6px 12px;padding-bottom:max(6px,env(safe-area-inset-bottom));border-top:1px solid var(--border)}
+  .user-info{display:flex;align-items:center;gap:8px}
+  .user-avatar{width:38px;height:38px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;overflow:hidden}
+  .user-avatar img{width:100%;height:100%;object-fit:cover;border-radius:10px}
+  .user-name{font-size:13px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .user-role{font-size:9px;color:var(--text3);margin-top:1px}
+
+
+  .logout-btn{margin-left:auto;cursor:pointer;color:var(--text3);font-size:18px}.logout-btn:hover{color:var(--red)}
+  .no-spin::-webkit-outer-spin-button,.no-spin::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .no-spin{-moz-appearance:textfield}
+  .ea-wrap{display:none!important}
+  body.is-admin .ea-wrap{display:flex!important}
+  .topbar{position:fixed;top:0;left:240px;right:0;height:40px;z-index:150;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:0 12px;box-shadow:0 1px 4px rgba(0,0,0,.07);transition:left .25s cubic-bezier(.4,0,.2,1)}
+  .topbar-hb{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;gap:4px;padding:6px 7px;border-radius:6px;transition:background .15s;flex-shrink:0}
+  .topbar-hb:hover{background:var(--surface2)}
+  .topbar-hb span{width:20px;height:2px;background:var(--text);border-radius:2px;display:block}
+  .topbar-title{font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .topbar-user{display:none;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
+  @media(max-width:900px){.topbar-user{display:flex}}
+  .topbar-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid var(--accent);flex-shrink:0;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:14px;overflow:hidden;cursor:pointer}
+  .topbar-avatar img{width:100%;height:100%;object-fit:cover}
+  .topbar-loc{font-size:11px;font-weight:700;color:var(--accent);white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+  .main-content{margin-left:240px;padding:48px 12px 16px 12px;height:100vh;height:-webkit-fill-available;overflow-y:auto;-webkit-overflow-scrolling:touch;box-sizing:border-box;vertical-align:top;transition:margin-left .25s cubic-bezier(.4,0,.2,1)}
+  .page-header{display:none}
+  .page{display:none}.page.active{display:block;padding-bottom:80px}
+  .page-header{margin-bottom:4px}
+  .page-title{font-size:18px;font-weight:800}.page-sub{font-size:12px;color:var(--text2);margin-top:2px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+  .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+  .card-title{font-size:15px;font-weight:700}
+  .table-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;padding:10px 14px;background:var(--surface2);color:var(--text2);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border)}
+  td{padding:11px 14px;border-bottom:1px solid var(--border);color:var(--text)}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:rgba(42,154,160,.04)}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+  .badge-green{background:rgba(34,197,94,.15);color:var(--green)}
+  .badge-amber{background:rgba(42,154,160,.15);color:var(--accent)}
+  .badge-red{background:rgba(239,68,68,.15);color:var(--red)}
+  .badge-blue{background:rgba(59,130,246,.15);color:var(--blue)}
+  .badge-purple{background:rgba(139,92,246,.15);color:var(--purple)}
+  .badge-yellow{background:rgba(234,179,8,.18);color:#a16207;font-weight:800}
+  .badge-onwater{background:#dbeafe;color:#1d4ed8;font-weight:800;border:1px solid #93c5fd}
+  .badge-reached{background:#16a34a;color:#fff;font-weight:800}
+  .badge-gray{background:rgba(0,0,0,.06);color:var(--text2)}
+  .modal-overlay{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(30,40,70,.45);z-index:100000;display:none;align-items:center;justify-content:center}
+  .modal-overlay.open{display:flex;opacity:1;pointer-events:all}
+  .modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:32px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;transform:translateY(20px);transition:transform .2s}
+  .modal-overlay.open .modal{transform:translateY(0)}
+  .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+  .modal-title{font-size:18px;font-weight:700}
+  .modal-close{cursor:pointer;font-size:22px;color:var(--text3)}.modal-close:hover{color:var(--text)}
+  .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;border-top:1px solid var(--border);padding-top:20px}
+  .modal-err{color:#dc2626;font-size:12px;font-weight:600;padding:6px 10px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:6px;display:none;width:100%;text-align:left}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .form-hint{font-size:12px;color:var(--text3);margin-top:5px}
+  textarea{resize:vertical;min-height:70px}
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+  .tb-compact-grid{display:flex;flex-wrap:wrap;gap:8px}
+  .tb-section{border-radius:8px;border:1px solid transparent;padding:8px;transition:background .25s,border-color .25s}
+  .tb-section.tb-active{background:rgba(42,154,160,.09);border-color:var(--accent)}
+  .tb-section.tb-filled{background:rgba(34,197,94,.05);border-color:rgba(34,197,94,.2)}
+  @keyframes tbPromptGlow{0%,100%{box-shadow:0 0 0 0 rgba(42,154,160,.0);border-color:var(--border2)}50%{box-shadow:0 0 0 4px rgba(42,154,160,.22),0 0 12px rgba(42,154,160,.12);border-color:var(--accent)}}
+  .tb-prompt{animation:tbPromptGlow 1.6s ease-in-out infinite!important;border-color:var(--accent)!important;outline:none!important}
+  button.tb-prompt{border-radius:6px!important;border:1.5px solid var(--accent)!important;color:#000!important;background:rgba(42,154,160,.15)!important}
+  div.tb-prompt{border-radius:6px!important;border:1.5px solid var(--accent)!important}
+  .tb-compact-grid .tb-fg{flex:1;min-width:140px;margin-bottom:0}
+  .tb-seg-row{display:flex;gap:8px;flex-wrap:nowrap}
+  .tb-seg-row .tb-fg{flex:1;min-width:110px;margin-bottom:0}
+  .form-group.tb-fg label{font-size:10px;margin-bottom:4px;display:none}
+  .form-group.tb-fg input,.form-group.tb-fg select{padding:10px 12px;font-size:14px;border-radius:8px}
+  .dash-count-item{flex:1;min-width:140px;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-right:1px solid var(--border)}
+  .dash-count-item:last-child{border-right:none}
+  .dash-count-label{font-size:13px;color:#000;font-weight:500}
+  .dash-count-num{font-size:22px;font-weight:800;font-family:var(--mono);color:#16a34a}
+  /* Process flow */
+  .pflow{display:flex;align-items:flex-start;flex-wrap:wrap;gap:0;margin:10px 0 6px}
+  .pf-step-wrap{display:flex;flex-direction:column;align-items:center;gap:3px}
+  .pf-step{display:flex;align-items:center;gap:4px;font-size:11px;padding:5px 11px;background:var(--surface2);border:1px solid var(--border);white-space:nowrap}
+  .pf-step-wrap:first-child .pf-step{border-radius:20px 0 0 20px}.pf-step-wrap:last-child .pf-step{border-radius:0 20px 20px 0}
+  .pf-step.done{background:rgba(34,197,94,.1);border-color:var(--green);color:var(--green)}
+  .pf-step.active{background:rgba(42,154,160,.15);border-color:var(--accent);color:var(--accent);font-weight:600}
+  .pf-step.skip{opacity:.4;text-decoration:line-through;color:var(--text3)}
+  .pf-step.wait{color:var(--text3)}
+  .pf-user{font-size:10px;text-align:center;line-height:1.4;max-width:130px;word-break:break-word}
+  .pf-user-done{color:#16a34a;font-weight:600}
+  .pf-user-pending{color:var(--text3)}
+  .pf-user-skip{color:var(--text3);opacity:.4}
+  .pf-time{display:block;font-size:9px;color:var(--text3);font-weight:400}
+  .pf-arrow{color:var(--text3);font-size:16px;font-weight:900;padding:0 2px;margin-top:4px;line-height:1}
+  .c-badge{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(139,92,246,.15);color:var(--purple);margin-left:6px}
+  /* Segment cards */
+  .seg-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;transition:border-color .2s,box-shadow .2s}
+  .seg-card:hover{border-color:var(--border2);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+  .seg-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+  .seg-id{font-family:var(--mono);font-size:12px;color:var(--accent)}
+  .seg-route{font-size:14px;font-weight:600;margin-top:2px}
+  .seg-meta{font-size:12px;color:var(--text2);margin-top:4px}
+  .info-box{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--blue);margin-bottom:16px}
+  .divider{height:1px;background:var(--border);margin:20px 0}
+  .toolbar{display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+  /* Filter row — always single line, horizontally scrollable on narrow screens */
+  .filter-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;padding-bottom:2px}
+  .filter-row::-webkit-scrollbar{height:3px}
+  .filter-row::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+  .filter-row>*{flex-shrink:0}
+  .filter-row input[type=text]{min-width:100px;width:auto}
+  .action-btn{background:none;border:none;cursor:pointer;padding:3px 6px;border-radius:4px;font-size:14px;transition:background .15s}.action-btn:hover{background:var(--surface2)}
+  tr.clickable-row{cursor:pointer;transition:background .15s}tr.clickable-row:hover{background:rgba(42,154,160,.06)!important}tr.clickable-row:active{background:rgba(42,154,160,.12)!important}
+  .notification{position:fixed;top:12px;left:50%;transform:translate(-50%,-120px);background:var(--green);color:#000;padding:14px 32px;border-radius:10px;font-size:14px;font-weight:700;z-index:200000;opacity:0;pointer-events:none;transition:transform .3s,opacity .3s;max-width:80%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.25);white-space:pre-line}
+  .notification.show{transform:translate(-50%,0);opacity:1;pointer-events:auto}.notification.error{background:var(--red);color:#fff;font-size:14px}
+  .trip-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:8px;transition:border-color .2s,box-shadow .2s}
+  .trip-card:hover{border-color:var(--border2);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+  .trip-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:6px}
+  .kap-tabs{display:flex;flex-direction:row;border-bottom:2px solid var(--border);overflow-x:auto}
+  .kap-tab-history{color:var(--text2)}
+  .kap-tab.active.kap-tab-history{background:rgba(100,100,100,.1)}
+  .kap-revoke-btn{font-size:11px;padding:4px 10px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:6px;cursor:pointer;font-weight:600}
+  .kap-revoke-btn:hover{background:#dc2626;color:#fff}
+  .kap-inline-photo{width:130px;flex-shrink:0}
+  .kap-inline-rem{flex:1;display:flex;flex-direction:column}
+  @media(max-width:600px){.kap-inline-action{flex-direction:column}.kap-inline-photo{width:100%}}
+  .kap-tab{flex:1;padding:6px 10px;border:none;background:transparent;cursor:pointer;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;white-space:nowrap}
+  .kap-tab-exit{color:#dc2626}
+  .kap-tab-entry{color:#16a34a}
+  .kap-tab.active.kap-tab-exit{background:rgba(220,38,38,.1)}
+  .kap-tab.active.kap-tab-entry{background:rgba(22,163,74,.1)}
+  .kap-tab:not(.active){opacity:.5}
+  .kap-tab-count{background:#dc2626;color:#fff;font-size:11px;font-weight:800;min-width:20px;height:20px;padding:0 5px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;line-height:1}
+  .trip-amt-badge{background:#dcfce7;color:#16a34a;font-weight:800;font-size:12px;font-family:var(--mono);padding:2px 8px;border-radius:6px;white-space:nowrap}
+  .trip-amt-none{background:var(--surface2);color:var(--text3);font-weight:500}
+  .trip-id{font-family:var(--mono);font-size:14px;color:var(--accent);font-weight:800;letter-spacing:1px}
+  .seg-photo-thumb{width:48px;height:46px;object-fit:cover;border-radius:6px;border:2px solid var(--border2);cursor:pointer;transition:transform .15s;flex-shrink:0}
+  .seg-photo-thumb:hover{transform:scale(1.08);border-color:var(--accent)}
+  .seg-photos{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  /* Lightbox */
+  #photoLightbox{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.9);z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+  .trip-desc{font-size:12px;font-weight:600;margin-top:1px}
+  .trip-meta{font-size:11px;color:var(--text2);margin-top:2px}
+  /* ── Rich Segment Progress Card ─────────────────────── */
+  .seg-prog-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;margin-bottom:5px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+  .seg-prog-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;flex-wrap:wrap;gap:4px}
+  .seg-prog-label{display:flex;align-items:center;gap:6px}
+  .seg-lbl-bubble{width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .seg-prog-route{font-size:11px;font-weight:600;color:var(--text)}
+  .seg-prog-sub{font-size:10px;color:var(--text3);margin-top:0}
+  /* Step timeline */
+  .step-timeline{display:flex;gap:0;position:relative;margin-top:4px;flex-wrap:wrap}
+  .step-node{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;position:relative}
+  .step-node:not(:last-child)::after{content:"";position:absolute;top:13px;left:calc(50% + 13px);right:calc(-50% + 13px);height:3px;background:var(--border2);z-index:0}
+  .step-node.done:not(:last-child)::after{background:var(--green)}
+  .step-node.active:not(:last-child)::after{background:var(--border2)}
+  .step-icon-wrap{width:26px;height:26px;border-radius:50%;border:2px solid var(--border2);background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:12px;position:relative;z-index:1;flex-shrink:0;transition:all .2s}
+  .step-node.done .step-icon-wrap{background:rgba(34,197,94,.15);border-color:var(--green)}
+  .step-node.active .step-icon-wrap{background:rgba(42,154,160,.12);border-color:var(--accent);box-shadow:0 0 0 3px rgba(42,154,160,.15)}
+  .step-node.skip .step-icon-wrap{opacity:.4}
+  .step-node.wait .step-icon-wrap{opacity:.5}
+  .step-label{font-size:9px;font-weight:600;color:var(--text3);margin-top:3px;text-align:center;line-height:1.2}
+  .step-node.done .step-label{color:var(--green)}
+  .step-node.active .step-label{color:var(--accent);font-weight:700}
+  .step-node.skip .step-label{color:var(--text3);text-decoration:line-through}
+  .step-time{font-size:8px;color:var(--text3);text-align:center;margin-top:1px;line-height:1.2}
+  .step-user{font-size:8px;text-align:center;margin-top:1px;line-height:1.2;max-width:72px;word-break:break-word}
+  .step-user-done{color:#16a34a;font-weight:700}
+  .step-user-pending{color:var(--text3)}
+  .step-user-skip{color:var(--text3);opacity:.4}
+  .step-photo-wrap{margin-top:3px}
+  .step-photo-wrap img{width:36px;height:36px;object-fit:cover;border-radius:5px;border:2px solid var(--green);cursor:pointer;transition:transform .15s}
+  .step-photo-wrap img:hover{transform:scale(1.1);border-color:var(--accent)}
+  .locked-overlay{display:flex;align-items:center;gap:6px;color:var(--text3);font-size:12px;padding:6px 0}
+  .trip-seg-label{font-family:var(--mono);font-weight:700;color:var(--accent);font-size:11px}
+  .trip-overall-badge-done{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.3);border-radius:20px;padding:2px 8px;font-size:11px;font-weight:600}
+  .trip-overall-badge-active{background:rgba(42,154,160,.12);color:var(--accent);border:1px solid rgba(42,154,160,.3);border-radius:20px;padding:2px 8px;font-size:11px;font-weight:600}
+  .trip-overall-badge-rejected{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.3);border-radius:20px;padding:2px 8px;font-size:11px;font-weight:600}
+  .trip-overall-badge-cancelled{background:rgba(107,114,128,.12);color:#6b7280;border:1px solid rgba(107,114,128,.3);border-radius:20px;padding:2px 8px;font-size:11px;font-weight:600}
+  select:disabled{opacity:.45;cursor:not-allowed;border-style:dashed}
+  th.sortable{cursor:pointer;user-select:none}
+  th.sortable:hover{color:var(--text);background:var(--border)}
+  th.sort-asc::after{content:' ↑';color:var(--accent)}
+  th.sort-desc::after{content:' ↓';color:var(--accent)}
+  .dest-section{border-radius:10px;padding:16px;margin-bottom:4px}
+  .dest-section-a{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2)}
+  .dest-section-b{background:rgba(20,184,166,.06);border:1px solid rgba(20,184,166,.2)}
+  .dest-section-c{background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.2)}
+  .dest-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .dest-label-a{color:var(--blue)}
+  .dest-label-b{color:var(--teal)}
+  .dest-label-c{color:var(--purple)}
+  .dest-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .dest-dot-a{background:var(--blue)}
+  .dest-dot-b{background:var(--teal)}
+  .dest-dot-c{background:var(--purple)}
+
+  /* ===== MOBILE / TABLET RESPONSIVE ===== */
+  /* ── Hamburger button (always visible, top-left) ── */
+  .mob-topbar{display:none}
+  .mob-hamburger{display:none}
+  .sidebar-overlay{display:none;position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(30,40,70,.35);z-index:149}
+  .sidebar-overlay.open{display:block}
+
+  /* Quick Vehicle modal always centered on all screen sizes */
+  #mQuickVeh{align-items:center!important}
+  #mQuickVeh .modal{position:relative!important;bottom:auto!important;top:auto!important;border-radius:16px!important;transform:translateY(20px);max-height:80vh!important;width:min(400px,92vw)!important}
+  #mQuickVeh.open .modal{transform:translateY(0)!important}
+
+  @media(max-width:900px){
+    /* Narrow — sidebar hidden, topbar full width */
+    .sidebar{transform:translateX(-260px)!important}
+    .sidebar.nav-open{transform:translateX(0)!important}
+    .topbar{left:0!important}
+    .main-content{margin-left:0!important;padding-left:12px!important}
+  }
+
+  @media(max-width:768px){
+    /* Mobile — fix content padding */
+    .main-content{padding:48px 8px 12px 8px}
+
+    /* Login */
+    .login-card{width:calc(100vw - 32px);padding:32px 24px;margin:16px}
+
+    /* Stats grid */
+    .dash-count-item{min-width:120px;padding:12px 14px}
+
+    /* Form rows stack vertically */
+    .form-row{grid-template-columns:1fr}
+
+    /* Page header */
+    .page-title{font-size:16px}
+    .page-header{margin-bottom:4px}
+
+    /* Cards */
+    .card{padding:16px;margin-bottom:14px;overflow:visible}
+    .card-header{flex-direction:column;align-items:flex-start;gap:10px}
+    .card-header>div:last-child{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%}
+
+    /* Tables — horizontal scroll with min-width hint */
+    .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    table{min-width:480px}
+
+    /* Modal — bottom sheet on mobile, scrollable */
+    .modal{width:100vw;max-width:100vw;max-height:92vh;border-radius:20px 20px 0 0;padding:24px 20px;position:fixed;bottom:0;left:0;right:0;top:auto;transform:translateY(100%);overflow-y:scroll;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+    .modal-overlay{align-items:flex-end} #mSpotExit{align-items:center!important}
+    .modal-overlay.open .modal{transform:translateY(0)}
+    #mConfirm .modal{bottom:auto;top:auto;left:auto;right:auto;position:relative;width:min(380px,92vw);max-height:none;border-radius:16px;transform:none}
+    #mConfirm{align-items:center!important;justify-content:center!important}
+    #mRevokeMR .modal,#mRevokeConfirm .modal{bottom:auto;top:auto;left:auto;right:auto;position:relative;width:min(380px,92vw);max-height:none;border-radius:16px;transform:none}
+    #mRevokeMR,#mRevokeConfirm{align-items:center!important;justify-content:center!important}
+    #mCamCapture .modal{bottom:auto;top:auto;left:auto;right:auto;position:relative;width:min(440px,96vw);max-height:85vh;border-radius:16px;transform:none}
+    #mCamCapture{align-items:center!important;justify-content:center!important}
+    #mRecordDetail .modal{bottom:auto;top:auto;left:auto;right:auto;position:relative;width:min(480px,96vw);max-height:88vh;border-radius:16px;transform:none;overflow-y:scroll;-webkit-overflow-scrolling:touch}
+    #mRecordDetail{align-items:center!important;justify-content:center!important}
+    /* Trip Booking modal — slides down from top */
+    #mTripBooking{align-items:flex-start!important}
+    #mTripBooking .modal{bottom:auto;top:0;border-radius:0 0 16px 16px;transform:translateY(-110%);max-height:calc(100vh - 8px);overflow-y:scroll;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+    #mTripBooking.open .modal{transform:translateY(0)}
+
+
+    /* Segment cards */
+    .seg-card{padding:12px}
+    .seg-prog-header{flex-direction:column;align-items:flex-start}
+    .step-node:not(:last-child)::after{display:none}
+    .step-timeline{gap:8px}
+    .step-node{flex:0 0 calc(50% - 4px);align-items:flex-start;flex-direction:row;gap:8px;background:var(--surface2);border-radius:8px;padding:8px}
+    .step-icon-wrap{flex-shrink:0}
+    .step-label{text-align:left;font-size:11px}
+    .step-time{text-align:left}
+
+    /* Process flow — wrap better */
+    .pflow{flex-wrap:wrap;gap:4px}
+    .pf-step-wrap{min-width:60px}
+    .pf-step{font-size:10px;padding:4px 8px;white-space:normal}
+    .pf-step-wrap:first-child .pf-step,.pf-step-wrap:last-child .pf-step{border-radius:20px}
+    .pf-arrow{display:none}
+
+    /* Toolbar */
+    .toolbar{flex-direction:column;align-items:stretch}
+    .toolbar input,.toolbar select{width:100%}
+    /* Filter row stays horizontal even on mobile — scrollable */
+    .filter-row{flex-wrap:nowrap!important;flex-direction:row!important;overflow-x:auto;gap:6px}
+    .filter-row input,.filter-row select{width:auto!important;min-width:0}
+
+    /* Trip cards */
+    .trip-card{padding:14px}
+    .trip-card-header{flex-direction:column;align-items:flex-start}
+    .trip-segs{gap:6px}
+
+    /* Buttons in action rows */
+    .btn{font-size:13px;padding:9px 16px}
+    .modal-footer{flex-wrap:wrap}
+    .modal-footer .btn{flex:1;justify-content:center}
+
+    /* Dashboard card-header wraps title above filter row on mobile */
+    #pageDashboard .card-header{align-items:stretch;flex-direction:column}
+    #pageDashboard .card-header .filter-row{width:100%}
+
+    /* Notification */
+    .notification{top:8px;bottom:auto;left:50%;right:auto;text-align:center;transform:translate(-50%,-120px);z-index:200000;max-width:92%}
+  }
+
+  @media(min-width:769px) and (max-width:1024px){
+    /* Tablet — sidebar is overlay, just adjust grid */
+    .form-row{grid-template-columns:1fr 1fr}
+    .card{padding:20px}
+    .modal{width:520px}
+  }
+
+
+  /* Custom driver autocomplete dropdown */
+  .driver-ac-wrap{position:relative}
+  .driver-ac-list{position:fixed;z-index:10000;background:var(--surface);border:1px solid var(--border2);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.18);max-height:180px;overflow-y:auto;overflow-x:hidden;min-width:180px;display:none}
+  .driver-ac-list.open{display:block}
+  .driver-ac-item{padding:8px 12px;font-size:13px;cursor:pointer;color:var(--text)}
+  .driver-ac-item:hover{background:var(--surface2)}
+  .tb-newtrip-only{display:none}
+  .tb-amend-only{display:none}
+  /* Multi-challan list per destination */
+  .challan-section-disabled{opacity:.4;pointer-events:none}
+
+  .challan-list{display:flex;flex-direction:column;gap:2px;margin-top:3px}
+  .challan-row{display:flex;gap:4px;align-items:center;background:rgba(0,0,0,.03);border-radius:5px;padding:2px 5px}
+  .challan-row input{flex:1;min-width:0;padding:5px 7px;font-size:12px;border:1px solid var(--border2);border-radius:6px;background:#fffbea;color:var(--text)}
+  .challan-row .ch-del{background:none;border:none;color:#dc2626;cursor:pointer;font-size:14px;padding:0 3px;flex-shrink:0}
+  .challan-photo-thumb{width:30px;height:30px;border:1.5px dashed var(--border2);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text3);overflow:hidden;background:var(--surface2);cursor:pointer;flex-shrink:0}
+  .challan-photo-thumb.has-photo{border-color:var(--green);border-style:solid}
+  .add-challan-btn{background:none;border:1px dashed var(--border2);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--accent);cursor:pointer;font-weight:700;margin-top:3px;transition:border-color .15s}
+  .add-challan-btn:hover{border-color:var(--accent)}
+  /* Vehicle type mismatch warning */
+  @keyframes vtMismatchFlash{0%,100%{opacity:1;background:rgba(239,68,68,.12)}50%{opacity:.5;background:rgba(239,68,68,.04)}}
+  .vt-mismatch-warn{display:none;padding:6px 10px;border-radius:7px;font-size:11px;font-weight:700;color:#dc2626;border:1.5px solid #fca5a5;animation:vtMismatchFlash 1.2s ease-in-out infinite;margin-top:4px}
+  .vt-mismatch-warn.show{display:block}
+
+  /* Trip Booking modal: align to top, no scroll cap */
+  #mTripBooking{align-items:flex-start!important;padding-top:8px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  #mTripBooking>.modal{max-height:calc(100vh - 16px);overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+
+  /* DB boot splash */
+  .db-splash-logo{font-family:var(--mono);font-size:13px;letter-spacing:4px;color:var(--accent);text-transform:uppercase}
+  @keyframes dbspin{to{transform:rotate(360deg)}}
+  /* Flashing highlight for current segment challan row */
+  @keyframes kapFlash{0%,100%{background:#adff2f}50%{background:#f0fff0}}
+  .kap-row-active{animation:kapFlash 1.2s ease-in-out infinite}
+  .kap-row-done{background:#dcfce7}
+  /* Flashing red for missing data */
+  @keyframes flashRed{0%,100%{background:#fecaca;color:#dc2626}50%{background:#fff;color:#dc2626}}
+  .flash-red{animation:flashRed 1s ease-in-out infinite;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
+  /* Flashing green for next step */
+  @keyframes flashGreen{0%,100%{background:#bbf7d0;color:#15803d}50%{background:#f0fdf4;color:#15803d}}
+  /* Flashing orange for approaching expiry */
+  @keyframes flashOrange{0%,100%{background:#fed7aa;color:#c2410c}50%{background:#fff7ed;color:#c2410c}}
+  .flash-green{animation:flashGreen 1.2s ease-in-out infinite;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700}
+
+  /* Compact date picker — shows dd-MMM-yy text, native picker opens on click */
+  .date-btn{position:relative;display:inline-flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:5px 10px;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;white-space:nowrap;min-width:80px}
+  .date-btn input[type=date]{position:absolute;top:0;right:0;bottom:0;left:0;opacity:0;width:100%;height:100%;cursor:pointer;border:none;background:none}
+  .date-btn-label{pointer-events:none}
+  /* Empty state placeholder */
+  .empty-state{text-align:center;padding:32px 20px;color:var(--text3);font-size:14px;font-weight:500}
+  /* Better focus outlines for accessibility */
+  input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  /* Smoother button transitions */
+  .btn:active{transform:scale(.97)}
+
+  /* ── Optimized utility classes (auto-generated) ── */
+  .u-photo-input-overlay{opacity:0;position:absolute;top:0;right:0;bottom:0;left:0;width:100%;height:100%;cursor:pointer;border:none}
+  .u-label-sm{font-size:12px;color:var(--text2);font-weight:600;white-space:nowrap}
+  .u-mini-btn{font-size:12px;padding:7px 12px;cursor:pointer;margin:0}
+  .u-thumb{width:28px;height:28px;object-fit:cover;border-radius:4px;border:2px solid var(--border)}
+  .u-thumb-lg{width:40px;height:40px;border:2px dashed var(--border2);border-radius:6px;display:flex;align-items:center;justify-content:center}
+  .u-meta-label{font-size:10px;color:#000;font-weight:600;margin:0}
+  .u-tag-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+  .u-flex-row{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end}
+    .sb-setup-card{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:40px 36px;width:100%;max-width:480px;box-shadow:0 8px 48px rgba(0,0,0,.12)}
+  .sb-logo-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .sb-logo-icon{font-size:28px}
+  .sb-setup-title{font-size:22px;font-weight:800;color:var(--text)}
+  .sb-setup-sub{font-size:13px;color:var(--text2);margin-bottom:28px;line-height:1.5}
+  .sb-step{display:flex;gap:10px;align-items:flex-start;margin-bottom:14px;font-size:13px;color:var(--text2);line-height:1.5}
+  .sb-step-num{background:var(--accent);color:#fff;font-weight:800;font-size:11px;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+  .sb-link{color:var(--accent);font-weight:700;text-decoration:none}
+  .sb-link:hover{text-decoration:underline}
+  .sb-input-label{font-size:11px;font-weight:700;color:#000;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;margin-top:16px;display:block}
+  .sb-input{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;transition:border-color .2s}
+  .sb-input:focus{border-color:var(--accent)}
+  .sb-err{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:#dc2626;font-size:12px;padding:8px 12px;border-radius:8px;margin-top:12px;display:none}
+  .sb-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:12px;font-size:15px;font-weight:800;cursor:pointer;margin-top:16px;transition:background .2s}
+  .sb-btn:hover{background:var(--accent2)}
+  .sb-note{font-size:11px;color:var(--text3);text-align:center;margin-top:12px;line-height:1.5}
+  .sb-status{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+  .sb-status.connected{background:rgba(34,197,94,.15);color:#16a34a}
+  .sb-status.disconnected{background:rgba(239,68,68,.1);color:#dc2626}
+
+  /* ── Actions column always visible ─────────────────────────────────── */
+  #tUsers thead th:last-child,#tUsers tbody td:last-child,
+  #tDrivers thead th:last-child,#tDrivers tbody td:last-child,
+  #tVendors thead th:last-child,#tVendors tbody td:last-child,
+  #tVehicles thead th:last-child,#tVehicles tbody td:last-child,
+  #tLocations thead th:last-child,#tLocations tbody td:last-child,
+  #tVTypes thead th:last-child,#tVTypes tbody td:last-child{display:table-cell!important}
+  /* ── Location Master: Name col minimum width & Actions always visible ─ */
+  #tLocations thead th:first-child,#tLocations tbody td:first-child{min-width:180px}
+  #tLocations thead th:last-child,#tLocations tbody td:last-child{display:table-cell!important;white-space:nowrap}
+
+  /* ── Responsive master table column hiding ─────────────────────────── */
+  /* Columns hidden at ≤600px (last meaningful col before Actions) */
+  @media (max-width:600px){
+    /* Users: hide Role(s) col 4 */
+    #tUsers thead th:nth-child(4),#tUsers tbody td:nth-child(4){display:none}
+    /* Drivers: hide DL Expiry col 5 */
+    #tDrivers thead th:nth-child(5),#tDrivers tbody td:nth-child(5){display:none}
+    /* Vendors: hide Address col 5 */
+    #tVendors thead th:nth-child(5),#tVendors tbody td:nth-child(5){display:none}
+    /* Vehicles: hide Insurance col 6 AND RTO col 5 (table is very wide) */
+    #tVehicles thead th:nth-child(6),#tVehicles tbody td:nth-child(6){display:none}
+    #tVehicles thead th:nth-child(5),#tVehicles tbody td:nth-child(5){display:none}
+    /* Locations: hide Approver(s) col 6 */
+    #tLocations thead th:nth-child(6),#tLocations tbody td:nth-child(6){display:none}
+  }
+  /* Columns also hidden at ≤440px (one more column) */
+  @media (max-width:440px){
+    /* Users: also hide Location col 3 */
+    #tUsers thead th:nth-child(3),#tUsers tbody td:nth-child(3){display:none}
+    /* Drivers: also hide Vendor col 4 */
+    #tDrivers thead th:nth-child(4),#tDrivers tbody td:nth-child(4){display:none}
+    /* Vendors: also hide Mapped User col 4 and Contact col 3 */
+    #tVendors thead th:nth-child(4),#tVendors tbody td:nth-child(4){display:none}
+    #tVendors thead th:nth-child(3),#tVendors tbody td:nth-child(3){display:none}
+    /* Vehicles: also hide PUC Expiry col 4 */
+    #tVehicles thead th:nth-child(4),#tVehicles tbody td:nth-child(4){display:none}
+    /* Locations: also hide Mat. Receiver(s) col 5 */
+    #tLocations thead th:nth-child(5),#tLocations tbody td:nth-child(5){display:none}
+  }
+  
+  /* ── Date-filter block: compact 2×2 preset buttons ─────────────── */
+  .df-block{display:inline-grid;width:fit-content;grid-template-columns:1fr 1fr auto auto;grid-template-rows:auto auto;gap:3px 4px;align-items:end;padding:6px 8px;border:1px solid var(--border2);border-radius:8px;background:var(--surface2);}.df-block .date-btn{width:100%;box-sizing:border-box}.df-block .dr-btn{width:100%;box-sizing:border-box}
+  .dr-btn{font-size:11px;padding:4px 6px;border:1px solid var(--border2);border-radius:5px;background:var(--surface2);cursor:pointer;font-weight:800;color:var(--text2);transition:background .15s,color .15s,border-color .15s;white-space:nowrap;text-align:center;min-width:0;letter-spacing:.3px}
+  .dr-btn:hover{background:var(--border2);color:var(--text)}
+  .dr-btn.dr-btn-active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  
+  /* iOS Safari input zoom fix — inputs must be ≥16px font to prevent auto-zoom */
+  @supports (-webkit-touch-callout: none) {
+    input[type="text"], input[type="password"], input[type="tel"],
+    input[type="email"], input[type="number"], input[type="date"],
+    select, textarea {
+      font-size: max(16px, 1em) !important;
+    }
+  }
+
+  /* ── Portal Sidebar ── */
+  #portalSidebar{
+    width:260px;flex-shrink:0;
+    background:#ffffff;
+    border-right:1px solid #e2e8f0;
+    box-shadow:2px 0 12px rgba(0,0,0,.06);
+    display:none;flex-direction:column;height:100vh;overflow-y:auto;
+    transition:transform .28s cubic-bezier(.4,0,.2,1);
+    z-index:200;
+  }
+  #portalSidebar.ps-visible{display:flex;}
+  .ps-logo{padding:18px 18px 14px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:10px;}
+  .ps-logo-text{flex:1;min-width:0;}
+  .ps-logo-text .ps-brand{font-size:9px;font-weight:700;letter-spacing:3px;color:#2a9aa0;text-transform:uppercase;}
+  .ps-logo-text .ps-appname{font-size:14px;font-weight:800;color:#1a2033;letter-spacing:-.3px;margin-top:1px;}
+  .ps-user-card{padding:14px 16px;border-bottom:1px solid #e2e8f0;cursor:pointer;transition:background .18s;}
+  .ps-user-card:hover{background:#f0f4f8;}
+  .ps-user-row{display:flex;align-items:center;gap:11px;}
+  .ps-avatar{width:42px;height:42px;border-radius:12px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#fff;flex-shrink:0;overflow:hidden;border:2px solid rgba(42,154,160,.25);}
+  .ps-avatar img{width:100%;height:100%;object-fit:cover;border-radius:10px;}
+  .ps-user-info{flex:1;min-width:0;}
+  .ps-user-name{font-size:13px;font-weight:700;color:#1a2033;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ps-user-role{font-size:10px;color:#64748b;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ps-user-loc{margin-top:4px;}
+  .ps-nav{flex:1;padding:6px 10px;overflow-y:auto;}
+  .ps-section{font-size:9px;font-weight:700;color:#94a3b8;letter-spacing:2px;text-transform:uppercase;padding:8px 8px 3px;margin-top:4px;}
+  .ps-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;font-size:13px;font-weight:600;color:#4a5578;cursor:pointer;transition:all .18s;margin-bottom:2px;border:1px solid transparent;}
+  .ps-item:hover{background:#f0f4f8;color:#1a2033;}
+  .ps-item.ps-active{background:rgba(42,154,160,.08);color:#2a9aa0;border-color:rgba(42,154,160,.18);}
+  .ps-item .ps-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0;}
+  .ps-item .ps-label{flex:1;}
+  .ps-admin-badge{font-size:9px;background:rgba(139,92,246,.1);color:#8b5cf6;padding:1px 6px;border-radius:4px;font-weight:700;letter-spacing:.5px;}
+  .ps-bottom{padding:12px 14px;padding-bottom:max(32px,env(safe-area-inset-bottom));border-top:1px solid #e2e8f0;}
+  .ps-logout{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;transition:all .18s;}
+  .ps-logout:hover{background:rgba(239,68,68,.07);color:#dc2626;}
+  #portalMain{flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;}
+
+  /* ── Portal topbar (mobile) ── */
+  #portalTopbar{
+    display:none;position:fixed;top:0;left:0;right:0;height:52px;
+    background:#fff;border-bottom:1px solid #e2e8f0;
+    align-items:center;gap:10px;padding:0 14px;
+    z-index:101;box-shadow:0 1px 4px rgba(0,0,0,.07);
+  }
+  #portalTopbar.pt-visible{display:flex;}
+  .pt-hb{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;gap:4px;padding:6px 5px;border-radius:6px;}
+  .pt-hb:hover{background:#f0f4f8;}
+  .pt-hb span{width:20px;height:2px;background:#1a2033;border-radius:2px;display:block;}
+  .pt-title{font-size:15px;font-weight:800;color:#1a2033;}
+
+  /* ── Portal sidebar overlay (mobile) ── */
+  #portalSidebarOverlay{
+    display:none;position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.35);z-index:199;
+  }
+  #portalSidebarOverlay.ps-ov-open{display:block;}
+
+  @media(max-width:700px){
+    #portalSidebar{
+      width:260px;position:fixed;top:0;bottom:0;left:0;
+      transform:translateX(-280px);
+      display:flex !important;flex-direction:column !important;
+      overflow-y:auto !important;-webkit-overflow-scrolling:touch;
+      z-index:300 !important;
+    }
+    #portalSidebar.ps-mobile-open{transform:translateX(0);box-shadow:8px 0 32px rgba(0,0,0,.15);}
+    #portalTopbar.pt-visible{display:flex;}
+    #portalMain{padding:62px 12px 16px;margin-left:0 !important;justify-content:flex-start !important;align-items:stretch !important;}
+    /* Apps view: compact header row, cards flush below */
+    #portalViewApps{align-items:stretch !important;}
+    #portalViewApps .ps-apps-header{margin-bottom:12px !important;flex-direction:row !important;align-items:center !important;gap:10px !important;justify-content:flex-start !important;}
+    #portalViewApps .ps-apps-header-center{display:none !important;}
+    #portalViewApps .ps-apps-header-mobile{display:flex !important;}
+    #portalViewApps .ps-apps-divider{display:none !important;}
+    #portalViewApps .ps-apps-footer{display:none !important;}
+    #portalAppsGrid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr)) !important;gap:10px !important;max-width:100% !important;}
+    /* Compact card padding on mobile */
+    #portalAppsGrid>div{padding:18px 14px !important;}
+    #portalAppsGrid>div>div:first-child{font-size:30px !important;margin-bottom:8px !important;}
+    .ps-bottom{padding-bottom:max(56px,calc(env(safe-area-inset-bottom) + 40px)) !important;}
+  }
+  @media(min-width:701px){
+    #portalTopbar{display:none !important;}
+    #portalSidebarOverlay{display:none !important;}
+  }
+@keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes sbPulse{0%,100%{opacity:1}50%{opacity:.4}}
+  /* Security sidebar */
+  .sec-sidebar{position:fixed;top:0;left:0;width:260px;height:100vh;background:#fff;border-right:1px solid var(--border);z-index:200;overflow-y:auto;padding:0;transition:left .3s;display:flex;flex-direction:column}
+  .sec-sidebar .brand{padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+  .sec-sidebar .brand h3{font-size:14px;font-weight:800;color:var(--text);margin:0}
+  .sec-nav-sec{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:16px 16px 6px}
+  .sec-nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;transition:all .15s;border-left:3px solid transparent}
+  .sec-nav-item:hover{background:var(--accent-light);color:var(--accent)}
+  .sec-nav-item.active{background:var(--accent-light);color:var(--accent);border-left-color:var(--accent)}
+  .sec-topbar{display:none;position:fixed;top:0;left:0;right:0;height:52px;background:#fff;border-bottom:1px solid var(--border);z-index:150;align-items:center;padding:0 12px;gap:10px}
+  .sec-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:190}
+  .sec-overlay.show{display:block}
+  .sec-content{margin-left:260px;padding:24px;min-height:100vh;background:var(--bg)}
+  @media(max-width:700px){
+    .sec-sidebar{left:-270px}
+    .sec-sidebar.open{left:0}
+    .sec-topbar{display:flex}
+    .sec-content{margin-left:0;padding:16px;padding-top:68px}
+  }
+</style>
+</head>
+<body style="display:none">
+<!-- Splash -->
+<div id="dbSplash" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.95);display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px">
+  <div style="width:48px;height:48px;border:4px solid rgba(42,154,160,.3);border-top-color:#2a9aa0;border-radius:50%;animation:spin 0.8s linear infinite"></div>
+  <div style="color:#fff;font-size:14px;font-weight:600" id="splashMsg">Loading Security…</div>
+  <div style="color:#94a3b8;font-size:11px">KAP Security Surveillance</div>
+</div>
+<div class="notification" id="notification"></div>
+
+<!-- Photo Lightbox -->
+<div id="photoLightbox" onclick="if(event.target===this)this.style.display='none'" style="position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.9);z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:default">
+  <div style="display:flex;gap:10px;z-index:1">
+    <button onclick="document.getElementById('photoLightbox').style.display='none'" style="background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer">✕ Close</button>
+  </div>
+  <img id="photoLightboxImg" src="" alt="Photo" style="max-width:92vw;max-height:82vh;border-radius:10px;box-shadow:0 8px 48px rgba(0,0,0,.6)">
+</div>
+
+<!-- Mobile Topbar -->
+<div class="sec-topbar" id="secTopbar">
+  <button style="background:none;border:none;font-size:22px;cursor:pointer;padding:4px" onclick="toggleSecNav()">☰</button>
+  <div id="secPageTitle" style="font-size:15px;font-weight:800;color:var(--text);flex:1">Security</div>
+  <span id="secUserName" style="font-size:12px;color:var(--text2)"></span>
+  <span id="secStatusDot" style="width:8px;height:8px;border-radius:50%;background:#d1d5db;display:inline-block"></span>
+</div>
+<div class="sec-overlay" id="secOverlay" onclick="closeSecNav()"></div>
+
+<!-- Sidebar -->
+<div class="sec-sidebar" id="secSidebar">
+  <div class="brand">
+    <img src="data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADrbWV0YQAAAAAAAAAhaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAAAAAAAOcGl0bQAAAAAAAQAAAB5pbG9jAAAAAEQAAAEAAQAAAAEAAAETAAAJeQAAAChpaW5mAAAAAAABAAAAGmluZmUCAAAAAAEAAGF2MDFDb2xvcgAAAABqaXBycAAAAEtpcGNvAAAAFGlzcGUAAAAAAAAC0AAAAtAAAAAQcGl4aQAAAAADCAgIAAAADGF2MUOBBAwAAAAAE2NvbHJuY2x4AAEADQAGgAAAABdpcG1hAAAAAAAAAAEAAQQBAoMEAAAJgW1kYXQ" alt="KAP" style="width:32px;height:32px;border-radius:8px">
+    <div><h3>Security Surveillance</h3><div style="font-size:10px;color:var(--text3)">Gate & Checkpoint Ops</div></div>
+  </div>
+  <!-- User Info -->
+  <div style="border-bottom:1px solid var(--border);padding:10px 14px">
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:4px">
+      <div id="secAvatar" style="width:36px;height:36px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fff;flex-shrink:0;overflow:hidden;border:2px solid rgba(42,154,160,.25)">👤</div>
+      <div style="flex:1;min-width:0">
+        <div id="secUserFullName" style="font-size:12px;font-weight:700;color:#1a2033;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
+        <div id="secUserRole" style="font-size:10px;color:#64748b;margin-top:1px"></div>
+      </div>
+    </div>
+  </div>
+  <!-- My Apps -->
+  <div class="sec-nav-item" onclick="_navigateTo('myApps_VMS_v18.html')" style="background:rgba(42,154,160,.06);border:1px solid rgba(42,154,160,.15);margin:8px 10px;border-radius:8px;font-weight:700;color:var(--accent)">🏠 My Apps</div>
+  <div class="sec-nav-sec">OPERATIONS</div>
+  <div class="sec-nav-item" id="nKapSec" onclick="secGo('pageKapSecurity')">🛡 Gate Operations</div>
+  <div class="sec-nav-sec">MASTERS</div>
+  <div class="sec-nav-item" id="nCheckpoints" onclick="secGo('pageCheckpoints')">📍 Checkpoints</div>
+  <div class="sec-nav-item" id="nGuards" onclick="secGo('pageGuards')">👮 Guards</div>
+  <div class="sec-nav-item" id="nRoundSchedules" onclick="secGo('pageRoundSchedules')">🕐 Round Schedules</div>
+  <!-- Bottom -->
+  <div style="margin-top:auto;padding:8px 10px;padding-bottom:max(28px,env(safe-area-inset-bottom));border-top:1px solid var(--border)">
+    <div id="secConnWidget" onclick="typeof _testDbConn==='function'&&_testDbConn()" style="display:flex;align-items:center;gap:7px;padding:6px 10px;margin-bottom:6px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;transition:all .2s" title="Database connection status">
+      <span id="secConnDot" style="width:8px;height:8px;border-radius:50%;background:#d1d5db;flex-shrink:0;transition:background .4s;box-shadow:0 0 0 2px rgba(0,0,0,.04)"></span>
+      <div style="flex:1;min-width:0"><div id="secConnLabel" style="font-size:10px;font-weight:700;color:#475569">Connecting…</div></div>
+    </div>
+    <div onclick="secLogout()" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:12px;font-weight:600;color:#94a3b8;cursor:pointer;transition:all .18s" onmouseenter="this.style.background='rgba(239,68,68,.07)';this.style.color='#dc2626'" onmouseleave="this.style.background='transparent';this.style.color='#94a3b8'">
+      <span style="font-size:15px">🚪</span><span>Sign Out</span>
+    </div>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="sec-content" id="secApp" style="display:none">
+    <div class="page" style="display:none" id="pageKapSecurity">
+
+      <!-- ── KAP LANDING: two big buttons ── -->
+      <div id="kapLanding">
+        <div class="page-header"><div class="page-title">KAP Security</div></div>
+        <div style="display:flex;flex-direction:column;gap:16px;padding:8px 0;max-width:520px">
+
+          <!-- Pre-Booked button -->
+          <button id="kapBtnPrebooked" onclick="setKapMode('prebooked')"
+            style="width:100%;padding:28px 20px;border-radius:14px;border:2px solid var(--accent);cursor:pointer;background:var(--surface);box-shadow:0 4px 18px rgba(42,154,160,.18);transition:all .18s;display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left">
+            <div style="display:flex;align-items:center;gap:10px;width:100%">
+              <span style="font-size:32px">🔒</span>
+              <div style="flex:1">
+                <div style="font-size:14px;font-weight:900;color:var(--accent);letter-spacing:.3px;line-height:1.3">REGISTER VEHICLE ENTRY</div>
+                <div style="font-size:13px;font-weight:900;color:var(--text);letter-spacing:.3px">FOR PRE-BOOKED TRIPS</div>
+              </div>
+              <span class="kap-tab-count" id="kapCountPrebooked" style="font-size:14px;min-width:26px;height:26px;padding:0 7px"></span>
+              <span style="font-size:20px;color:var(--text3)">›</span>
+            </div>
+            <div style="font-size:11px;color:var(--text3);margin-left:42px">Gate exit &amp; entry for scheduled trips</div>
+          </button>
+
+          <!-- Spot Entry button -->
+          <button id="kapBtnSpot" onclick="setKapMode('spot')"
+            style="width:100%;padding:28px 20px;border-radius:14px;border:2px solid #16a34a;cursor:pointer;background:var(--surface);box-shadow:0 4px 18px rgba(22,163,74,.14);transition:all .18s;display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left">
+            <div style="display:flex;align-items:center;gap:10px;width:100%">
+              <span style="font-size:32px">🏁</span>
+              <div style="flex:1">
+                <div style="font-size:14px;font-weight:900;color:#16a34a;letter-spacing:.3px;line-height:1.3">REGISTER SPOT</div>
+                <div style="font-size:13px;font-weight:900;color:var(--text);letter-spacing:.3px">VEHICLE ENTRY</div>
+              </div>
+              <span class="kap-tab-count" id="kapCountSpotBtn" style="font-size:14px;min-width:26px;height:26px;padding:0 7px;background:#16a34a"></span>
+              <span style="font-size:20px;color:var(--text3)">›</span>
+            </div>
+            <div style="font-size:11px;color:var(--text3);margin-left:42px">Record unplanned / walk-in vehicle arrivals</div>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- PRE-BOOKED CONTENT -->
+      <div id="kapPreBookedSection" style="display:none">
+        <!-- Back button -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <button onclick="setKapMode('landing')" style="display:flex;align-items:center;gap:6px;background:var(--accent);border:none;border-radius:10px;padding:10px 20px;font-size:15px;font-weight:800;cursor:pointer;color:#fff;box-shadow:0 2px 10px rgba(42,154,160,.35);letter-spacing:.2px">‹ Back</button>
+          <span style="font-size:15px;font-weight:800;color:var(--text)">Pre-Booked Trips</span>
+          <input type="text" id="kapSearch" placeholder="🔍 Trip ID…" oninput="renderKap()" style="margin-left:auto;font-size:12px;padding:5px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:var(--mono);width:140px">
+        </div>
+        <div style="border:2px solid var(--accent);border-radius:10px;overflow:hidden">
+        <div class="card" style="padding:0;border:none;border-radius:0;margin:0">
+          <div class="kap-tabs" style="margin-top:6px">
+            <button class="kap-tab kap-tab-exit active" id="kapTabExit" onclick="setKapTab(1)">
+              🚪 Gate Exit <span class="kap-tab-count" id="kapCountExit"></span>
+            </button>
+            <button class="kap-tab kap-tab-entry" id="kapTabEntry" onclick="setKapTab(2)">
+              🏁 Gate Entry <span class="kap-tab-count" id="kapCountEntry"></span>
+            </button>
+          </div>
+          <div style="padding:12px">
+            <div id="kapPendingContent"></div>
+            <div class="filter-row" style="margin:12px 0 8px;padding-top:10px;border-top:3px solid var(--accent)">
+              <div class="df-block" id="dfb_kapHist" ><span style="font-size:10px;font-weight:700;color:#000;text-transform:uppercase;letter-spacing:.4px">From</span><span style="font-size:10px;font-weight:700;color:#000;text-transform:uppercase;letter-spacing:.4px">To</span><button id="drb_kapHist_today" class="dr-btn" onclick="setDateRange('kapHistFrom','kapHistTo','today',renderKap,'kapHist')">1D</button><button id="drb_kapHist_week" class="dr-btn" onclick="setDateRange('kapHistFrom','kapHistTo','week',renderKap,'kapHist')">1W</button><div class="date-btn" onclick="this.querySelector('input').click()"><span class="date-btn-label" id="kapHistFromLbl">📅 —</span><input type="date" id="kapHistFrom" onchange="updDateBtnLbl('kapHistFrom');updDrBtns('kapHist','kapHistFrom','kapHistTo');renderKap()" class="u-photo-input-overlay"></div><div class="date-btn" onclick="this.querySelector('input').click()"><span class="date-btn-label" id="kapHistToLbl">📅 —</span><input type="date" id="kapHistTo" onchange="updDateBtnLbl('kapHistTo');updDrBtns('kapHist','kapHistFrom','kapHistTo');renderKap()" class="u-photo-input-overlay"></div><button id="drb_kapHist_month" class="dr-btn dr-btn-active" onclick="setDateRange('kapHistFrom','kapHistTo','month',renderKap,'kapHist')">1M</button><button id="drb_kapHist_year" class="dr-btn" onclick="setDateRange('kapHistFrom','kapHistTo','year',renderKap,'kapHist')">1Y</button></div>
+            </div>
+            <div id="kapHistoryContent"></div>
+          </div>
+        </div>
+        </div><!-- /border-div -->
+      </div>
+
+      <!-- SPOT VEHICLE ENTRY CONTENT -->
+      <div id="kapSpotSection" style="display:none">
+        <!-- Back button -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <button onclick="clearSpotForm();setKapMode('landing')" style="display:flex;align-items:center;gap:6px;background:var(--accent);border:none;border-radius:10px;padding:10px 20px;font-size:15px;font-weight:800;cursor:pointer;color:#fff;box-shadow:0 2px 10px rgba(42,154,160,.35);letter-spacing:.2px">‹ Back</button>
+          <span style="font-size:15px;font-weight:800;color:#16a34a">Spot Vehicle Entry</span>
+          <span id="spotLocBadge" style="font-size:11px;font-weight:700;padding:1px 8px;border-radius:5px;margin-left:2px"></span>
+        </div>
+        <div style="border:2px solid #16a34a;border-radius:10px;padding:0;overflow:hidden">
+      <div class="card" style="padding:8px 10px;border:none;border-radius:0;margin:0">
+
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px 12px;margin-bottom:6px">
+          <div style="display:flex;flex-direction:column;gap:1px">
+            <label style="font-size:9px;font-weight:700;color:#000;text-transform:uppercase;letter-spacing:.5px;margin:0;line-height:1.2">Vehicle No. *</label>
+            <input type="text" id="spotVehNum" placeholder="MH12-AB-1234" oninput="fmtVehNum(this)" maxlength="13" style="font-family:var(--mono);letter-spacing:.5px;text-transform:uppercase;padding:4px 6px;font-size:15px;border:1px solid var(--border2);border-radius:5px;width:100%;box-sizing:border-box">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:1px">
+            <label style="font-size:9px;font-weight:700;color:#000;text-transform:uppercase;letter-spacing:.5px;margin:0;line-height:1.2">Driver Name</label>
+            <input type="text" id="spotDriverName" placeholder="Name" style="padding:4px 6px;font-size:15px;border:1px solid var(--border2);border-radius:5px;width:100%;box-sizing:border-box">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:1px">
+            <label style="font-size:9px;font-weight:700;color:#000;text-transform:uppercase;letter-spacing:.5px;margin:0;line-height:1.2">Mobile</label>
+            <input type="tel" id="spotDriverMob" maxlength="10" placeholder="10 digits" style="padding:4px 6px;font-size:15px;border:1px solid var(--border2);border-radius:5px;width:100%;box-sizing:border-box">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:1px">
+            <label style="font-size:9px;font-weight:700;color:#000;text-transform:uppercase;letter-spacing:.5px;margin:0;line-height:1.2">Supplier</label>
+            <input type="text" id="spotSupplier" placeholder="Supplier" style="padding:4px 6px;font-size:15px;border:1px solid var(--border2);border-radius:5px;width:100%;box-sizing:border-box">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:1px">
+            <label style="font-size:9px;font-weight:700;color:#000;text-transform:uppercase;letter-spacing:.5px;margin:0;line-height:1.2">Challan No.</label>
+            <input type="text" id="spotChallan" placeholder="Challan" style="padding:4px 6px;font-size:15px;border:1px solid var(--border2);border-radius:5px;width:100%;box-sizing:border-box">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:1px">
+            <label style="font-size:9px;font-weight:700;color:#000;text-transform:uppercase;letter-spacing:.5px;margin:0;line-height:1.2">Remarks</label>
+            <input type="text" id="spotEntryRemarks" placeholder="Optional" style="padding:4px 6px;font-size:15px;border:1px solid var(--border2);border-radius:5px;width:100%;box-sizing:border-box">
+          </div>
+        </div>
+        <!-- Photos + Submit in one row -->
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <div id="spotVehThumb" onclick="_showPhotoChoice('spotVehFile','spotVehThumb')" style="width:40px;height:40px;border:2px dashed var(--border2);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--text3);overflow:hidden;background:var(--surface2);cursor:pointer;flex-shrink:0" title="Vehicle Photo">🚗</div>
+          <input type="file" id="spotVehFile" accept="image/*" capture="environment" style="display:none" onchange="onSpotPhoto(this,'spotVehThumb')">
+          <div id="spotChallanThumb" onclick="_showPhotoChoice('spotChallanFile','spotChallanThumb')" style="width:40px;height:40px;border:2px dashed var(--border2);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--text3);overflow:hidden;background:var(--surface2);cursor:pointer;flex-shrink:0" title="Challan Photo">📄</div>
+          <input type="file" id="spotChallanFile" accept="image/*" capture="environment" style="display:none" onchange="onSpotPhoto(this,'spotChallanThumb')">
+          <div id="spotDriverThumb" onclick="_showPhotoChoice('spotDriverFile','spotDriverThumb')" style="width:40px;height:40px;border:2px dashed var(--border2);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--text3);overflow:hidden;background:var(--surface2);cursor:pointer;flex-shrink:0" title="Driver Photo">🧑</div>
+          <input type="file" id="spotDriverFile" accept="image/*" capture="environment" style="display:none" onchange="onSpotPhoto(this,'spotDriverThumb')">
+          <input type="hidden" id="spotEditId">
+          <div style="flex:1"></div>
+          <button id="spotCancelEditBtn" onclick="cancelSpotEdit()" style="display:none;background:var(--surface2);color:var(--text2);border:1px solid var(--border2);border-radius:6px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer">✕ Cancel</button>
+          <button id="spotSubmitBtn" class="btn btn-green" onclick="submitSpotEntry()" style="font-size:13px;padding:8px 20px;font-weight:800">🏁 Record Entry</button>
+        </div>
+      </div>
+      <!-- History below form -->
+      <div class="card" style="margin-top:12px">
+        <div class="card-title" style="margin-bottom:6px">🕘 Spot Vehicle Entry History</div>
+        <div class="filter-row" style="margin-bottom:8px"><div class="df-block" id="dfb_spotHist" ><span style="font-size:10px;font-weight:700;color:#000;text-transform:uppercase;letter-spacing:.4px">From</span><span style="font-size:10px;font-weight:700;color:#000;text-transform:uppercase;letter-spacing:.4px">To</span><button id="drb_spotHist_today" class="dr-btn" onclick="setDateRange('spotHistFrom','spotHistTo','today',renderSpotHistory,'spotHist')">1D</button><button id="drb_spotHist_week" class="dr-btn" onclick="setDateRange('spotHistFrom','spotHistTo','week',renderSpotHistory,'spotHist')">1W</button><div class="date-btn" onclick="this.querySelector('input').click()"><span class="date-btn-label" id="spotHistFromLbl">📅 —</span><input type="date" id="spotHistFrom" onchange="updDateBtnLbl('spotHistFrom');updDrBtns('spotHist','spotHistFrom','spotHistTo');renderSpotHistory()" class="u-photo-input-overlay"></div><div class="date-btn" onclick="this.querySelector('input').click()"><span class="date-btn-label" id="spotHistToLbl">📅 —</span><input type="date" id="spotHistTo" onchange="updDateBtnLbl('spotHistTo');updDrBtns('spotHist','spotHistFrom','spotHistTo');renderSpotHistory()" class="u-photo-input-overlay"></div><button id="drb_spotHist_month" class="dr-btn dr-btn-active" onclick="setDateRange('spotHistFrom','spotHistTo','month',renderSpotHistory,'spotHist')">1M</button><button id="drb_spotHist_year" class="dr-btn" onclick="setDateRange('spotHistFrom','spotHistTo','year',renderSpotHistory,'spotHist')">1Y</button></div></div>
+        <div id="spotHistoryList"></div>
+      </div>
+        </div><!-- /spot-border-div -->
+      </div><!-- end kapSpotSection -->
+    </div><!-- end pageKapSecurity -->
+
+    <!-- TRIP BOOKING MODAL -->
+    
+    <!-- QUICK VEHICLE SELECT MODAL -->
+    
+
+    <!-- QUICK CHALLAN FILL MODAL -->
+    
+
+    <!-- Spot Exit Modal -->
+    
+
+    <!-- MATERIAL RECEIPT -->
+    <div class="page" style="display:none" id="pageCheckpoints">
+      <div class="page-header"><div class="page-title">Security Checkpoints</div><div class="page-sub">Manage checkpoints per KAP location</div></div>
+      <div class="card">
+        <div class="card-header" style="flex-wrap:wrap;gap:8px">
+          <div class="card-title">Checkpoints by Location</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <select id="cpLocFilter" onchange="renderCheckpoints()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);min-width:140px"><option value="">All KAP Locations</option></select>
+            <button class="btn btn-primary" id="btnAddCP" onclick="openCPModal()">+ Add Checkpoint</button>
+          </div>
+        </div>
+        <div id="cpContent"></div>
+      </div>
+    </div>
+
+    <!-- SECURITY GUARD MASTER -->
+    <div class="page" style="display:none" id="pageGuards">
+      <div class="page-header"><div class="page-title">Security Guard Master</div></div>
+      <div class="card">
+        <div class="card-header" style="flex-wrap:nowrap;gap:8px">
+          <div class="card-title">All Guards</div>
+          <div style="display:flex;gap:8px;flex-wrap:nowrap">
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:11px;font-weight:600;color:#000;white-space:nowrap;padding:7px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;user-select:none"><input type="checkbox" id="showInactiveGuard" onchange="renderGuards()" style="width:13px;height:13px;accent-color:var(--accent);cursor:pointer" checked> Hide Inactive</label>
+            <button class="btn btn-primary" id="btnAddGuard" onclick="openGuardModal()">+ Add Guard</button>
+          </div>
+        </div>
+        <div class="table-wrap"><table id="tGuards"><thead><tr>
+          <th>Photo</th>
+          <th class="sortable" onclick="sortTable('guardBody',1)">Name</th>
+          <th class="sortable" onclick="sortTable('guardBody',2)">Mobile</th>
+          <th class="sortable" onclick="sortTable('guardBody',3)">Location</th>
+          <th class="sortable" onclick="sortTable('guardBody',4)">Shift</th>
+          <th>Actions</th>
+        </tr></thead><tbody id="guardBody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- SECURITY ROUND SCHEDULE MASTER -->
+    <div class="page" style="display:none" id="pageRoundSchedules">
+      <div class="page-header"><div class="page-title">Security Round Schedules</div></div>
+      <div class="card">
+        <div class="card-header" style="flex-wrap:wrap;gap:8px">
+          <div class="card-title">All Schedules</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <select id="rsLocFilter" onchange="renderRoundSchedules()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);min-width:140px"><option value="">All Locations</option></select>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:11px;font-weight:600;color:#000;white-space:nowrap;padding:7px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;user-select:none"><input type="checkbox" id="showInactiveRS" onchange="renderRoundSchedules()" style="width:13px;height:13px;accent-color:var(--accent);cursor:pointer" checked> Hide Inactive</label>
+            <button class="btn btn-primary" id="btnAddRS" onclick="openRSModal()">+ Add Schedule</button>
+          </div>
+        </div>
+        <div class="table-wrap"><table id="tRoundSchedules"><thead><tr>
+          <th class="sortable" onclick="sortTable('rsBody',0)">Schedule Name</th>
+          <th class="sortable" onclick="sortTable('rsBody',1)">Location</th>
+          <th class="sortable" onclick="sortTable('rsBody',2)">Guard</th>
+          <th>Checkpoints</th>
+          <th class="sortable" onclick="sortTable('rsBody',4)">Frequency</th>
+          <th>Time Window</th>
+          <th>Actions</th>
+        </tr></thead><tbody id="rsBody"></tbody></table></div>
+      </div>
+    </div>
+</div><!-- /secApp -->
+
+<div class="modal-overlay" id="mQuickVeh" style="display:none;align-items:center!important"><div class="modal" style="width:400px;position:relative;bottom:auto;top:auto;border-radius:16px;transform:none;max-height:80vh">
+      <div class="modal-header"><div class="modal-title">Select Vehicle</div><div class="modal-close" onclick="cm('mQuickVeh')">×</div></div>
+      <input type="hidden" id="qvTripId">
+      <div class="form-group"><label>Vehicle Type *</label><select id="qvType" onchange="filterQuickVeh()" style="padding:10px 12px;font-size:14px"></select></div>
+      <div class="form-group"><label>Vehicle Number</label><select id="qvVehicle" disabled style="padding:10px 12px;font-size:14px"><option value="">— Select type first —</option></select></div>
+      <div class="modal-footer"><button class="btn btn-secondary" onclick="cm('mQuickVeh')">Cancel</button><button class="btn btn-primary" onclick="saveQuickVeh()">Save</button></div>
+    </div></div>
+<div class="modal-overlay" id="mQuickChallan" style="display:none"><div class="modal" style="width:520px">
+      <div class="modal-header"><div class="modal-title">Challan Details</div><div class="modal-close" onclick="cm('mQuickChallan')">×</div></div>
+      <input type="hidden" id="qcTripId">
+      <div id="qcRows"></div>
+      <div class="modal-footer"><button class="btn btn-secondary" onclick="cm('mQuickChallan')">Cancel</button><button class="btn btn-primary" onclick="saveQuickChallan()">Save</button></div>
+    </div></div>
+<div class="modal-overlay" id="mSpotExit" style="display:none;align-items:center!important"><div class="modal" style="width:min(360px,94vw);border-radius:14px;padding:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <span style="font-size:14px;font-weight:900;color:#dc2626">🚪 Record Vehicle Exit</span>
+        <span onclick="cm('mSpotExit')" style="cursor:pointer;font-size:20px;color:var(--text3);line-height:1;padding:0 4px">×</span>
+      </div>
+      <input type="hidden" id="spotExitId">
+      <!-- Trip info card -->
+      <div id="spotExitInfo" style="margin-bottom:10px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:8px 10px;font-size:11px"></div>
+      <!-- Photo + Remarks in one row -->
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
+        <div>
+          <div style="font-size:9px;font-weight:700;color:#000;text-transform:uppercase;margin-bottom:3px">Exit Photo *</div>
+          <div id="spotExitPhotoThumb" onclick="_showPhotoChoice('spotExitPhotoFile','spotExitPhotoThumb')" style="width:52px;height:52px;border:2px dashed var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text3);overflow:hidden;background:var(--surface2);cursor:pointer;flex-shrink:0">🚗</div>
+          <input type="file" id="spotExitPhotoFile" accept="image/*" capture="environment" style="display:none" onchange="onSpotPhoto(this,'spotExitPhotoThumb')">
+        </div>
+        <div style="flex:1">
+          <div style="font-size:9px;font-weight:700;color:#000;text-transform:uppercase;margin-bottom:3px">Remarks</div>
+          <input type="text" id="spotExitRemarks" placeholder="Optional..." style="width:100%;padding:6px 8px;font-size:12px;border:1px solid var(--border2);border-radius:6px;box-sizing:border-box">
+        </div>
+      </div>
+      <div class="modal-err" id="merr_mSpotExit" style="margin-bottom:6px"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-secondary" style="font-size:12px;padding:6px 14px" onclick="cm('mSpotExit')">Cancel</button>
+        <button class="btn btn-danger" style="font-size:12px;padding:6px 14px;font-weight:800" onclick="doSpotExitModal()">🚪 Confirm Exit</button>
+      </div>
+    </div></div>
+<div class="modal-overlay" id="mUser" style="display:none"><div class="modal" style="max-width:520px;max-height:90vh;overflow-y:auto"><div class="modal-header" style="position:sticky;top:0;background:var(--surface);z-index:1;padding-bottom:12px"><div class="modal-title" id="mUserTitle">Add User</div><div class="modal-close" onclick="cm('mUser')">×</div></div><input type="hidden" id="eUid">
+<div class="modal-overlay" id="mKap" style="display:none"><div class="modal" style="width:480px"><div class="modal-header"><div class="modal-title" id="mKapTitle">Gate Exit</div><div class="modal-close" onclick="closeKapModal()">×</div></div><input type="hidden" id="kapSegId"><input type="hidden" id="kapStep"><div class="seg-card" id="kapDetail"></div>
+
+<div class="form-group" style="margin-top:16px">
+  <label>Capture Photo (Optional)</label>
+  <!-- Camera UI -->
+  <div id="kapCamBox" style="display:none;flex-direction:column;gap:8px;margin-top:8px">
+    <video id="kapVideo" autoplay playsinline style="width:100%;border-radius:8px;border:1px solid var(--border2);background:#000;max-height:220px;object-fit:cover"></video>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" onclick="snapPhoto()" style="flex:1">📸 Take Photo</button>
+      <button class="btn btn-secondary" onclick="stopCamera()" style="flex:1">✕ Close Camera</button>
+    </div>
+  </div>
+  <!-- Preview of captured / selected photo -->
+  <div id="kapPhotoPreview" style="display:none;margin-top:8px;position:relative">
+    <img id="kapPreviewImg" style="width:100%;border-radius:8px;border:1px solid var(--border2);max-height:180px;object-fit:cover">
+    <button onclick="clearPhoto()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center">×</button>
+  </div>
+  <!-- Buttons row -->
+  <div id="kapPhotoButtons" style="display:flex;gap:8px;margin-top:8px">
+    <button class="btn btn-secondary" onclick="openCamera()" style="width:48px;height:48px;padding:0;font-size:22px;flex-shrink:0;border-radius:8px" title="Open Camera">📷</button>
+    <label class="btn btn-secondary" style="flex:1;text-align:center;cursor:pointer;margin:0">🖼 Choose File<input type="file" id="kapFileInput" accept="image/*" capture="environment" style="display:none" onchange="onFileChosen(this)"></label>
+  </div>
+  <canvas id="kapCanvas" style="display:none"></canvas>
+</div>
+
+<div class="form-group"><label>Remarks (Optional)</label><textarea id="kapRem" rows="2"></textarea></div>
+<div class="modal-footer"><button class="btn btn-secondary" onclick="closeKapModal()">Cancel</button><button class="btn btn-primary" id="kapBtn" onclick="doKapAction()" style="padding:8px 20px;min-width:0">Submit</button></div></div></div>
+
+<!-- MR ACTION MODAL -->
+<div class="modal-overlay" id="mMR" style="display:none"><div class="modal" style="width:480px"><div class="modal-header"><div class="modal-title">Material Receipt Acknowledgement</div><div class="modal-close" onclick="cm('mMR')">×</div></div><input type="hidden" id="mrSegId"><div class="seg-card" id="mrDetail"></div><div class="form-group" style="margin-top:16px"><label>Received By</label><input type="text" id="mrBy" readonly></div><div class="form-group"><label>Remarks (Optional)</label><textarea id="mrRem" rows="2"></textarea></div><div class="modal-footer" style="flex-wrap:wrap"><div class="modal-err" id="merr_mMR"></div><button class="btn btn-secondary" onclick="cm('mMR')">Cancel</button><button class="btn btn-green" onclick="doMR()">✓ Acknowledge Receipt</button></div></div></div>
+
+
+<!-- REUSABLE CAMERA CAPTURE MODAL -->
+<div class="modal-overlay" id="mCamCapture" style="display:none;z-index:100003">
+  <div class="modal" style="width:min(440px,96vw);padding:0;overflow:hidden">
+    <div class="modal-header" style="padding:12px 16px"><div class="modal-title" style="font-size:15px">📷 Take Photo</div><div class="modal-close" onclick="_closeCamCapture()">×</div></div>
+    <div style="padding:0 12px 12px">
+      <video id="_camVid" autoplay playsinline style="width:100%;border-radius:8px;background:#000;max-height:260px;object-fit:cover;display:block"></video>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-primary" onclick="_snapCamCapture()" style="flex:1;padding:10px;font-size:14px">📸 Capture</button>
+        <button class="btn btn-secondary" onclick="_closeCamCapture()" style="flex:1;padding:10px;font-size:14px">✕ Cancel</button>
+      </div>
+    </div>
+    <canvas id="_camCanvas" style="display:none"></canvas>
+  </div>
+</div>
+
+<!-- PHOTO CHOICE SHEET (camera or gallery) -->
+<div class="modal-overlay" id="mPhotoChoice" style="display:none;z-index:100002;align-items:flex-end;justify-content:center">
+  <div class="modal" style="width:min(340px,92vw);border-radius:16px 16px 0 0;padding:0;margin-bottom:0;bottom:0;position:absolute">
+    <div style="padding:18px 20px 14px;text-align:center">
+      <div style="width:36px;height:4px;background:#cbd5e1;border-radius:99px;margin:0 auto 14px"></div>
+      <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:14px">Add Photo</div>
+      <button class="btn btn-primary" onclick="_photoChoiceCam()" style="width:100%;padding:12px;font-size:14px;margin-bottom:8px;border-radius:10px">📷 Open Camera</button>
+      <button class="btn btn-secondary" onclick="_photoChoiceGallery()" style="width:100%;padding:12px;font-size:14px;margin-bottom:8px;border-radius:10px">🖼 Choose from Gallery</button>
+      <button class="btn btn-secondary" onclick="cm('mPhotoChoice')" style="width:100%;padding:10px;font-size:13px;color:var(--text3);border-radius:10px">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- RECORD DETAIL POPUP -->
+<div class="modal-overlay" id="mRecordDetail" style="display:none;z-index:100001">
+  <div class="modal" style="width:min(480px,96vw);max-height:88vh;overflow-y:auto">
+    <div class="modal-header" style="position:sticky;top:0;z-index:1;background:var(--surface)">
+      <div class="modal-title" id="rdTitle" style="font-size:16px">Record Detail</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="btn" id="rdEditBtn" style="font-size:12px;padding:5px 12px;display:none;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:700" onclick="cm('mRecordDetail')">✏️ Edit</button>
+        <div class="modal-close" onclick="cm('mRecordDetail')">×</div>
+      </div>
+</div>
+
+<div class="modal-overlay" id="mCheckpoint" style="display:none"><div class="modal" style="width:480px"><div class="modal-header"><div class="modal-title" id="mCPTitle">Add Checkpoint</div><div class="modal-close" onclick="cm('mCheckpoint')">×</div></div>
+  <input type="hidden" id="eCPid">
+  <div class="form-group"><label>KAP Location *</label><select id="cpLocS"></select></div>
+  <div class="form-group"><label>Checkpoint Name *</label><input type="text" id="cpNameI" placeholder="e.g. Main Gate, Loading Bay 2" maxlength="60"></div>
+  <div class="form-group"><label>Description</label><textarea id="cpDescI" rows="2" placeholder="Brief description of this checkpoint"></textarea></div>
+  <div class="form-row">
+    <div class="form-group"><label>Sort Order</label><input type="number" id="cpSortI" min="1" max="25" value="1" style="width:80px"></div>
+    <div class="form-group" style="flex-direction:row;align-items:center;gap:8px;padding:4px 0">
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-weight:600;color:var(--green)"><input type="checkbox" id="cpActiveI" checked style="width:16px;height:16px;cursor:pointer;accent-color:var(--green)"> <span>Active</span></label>
+    </div>
+  </div>
+  <div class="modal-footer" style="flex-wrap:wrap"><div class="modal-err" id="merr_mCheckpoint"></div><button class="btn btn-secondary" onclick="cm('mCheckpoint')">Cancel</button><button class="btn btn-primary" onclick="saveCP()">Save</button></div>
+</div></div>
+
+<div class="modal-overlay" id="mGuard" style="display:none"><div class="modal" style="width:480px"><div class="modal-header"><div class="modal-title" id="mGuardTitle">Add Guard</div><div class="modal-close" onclick="cm('mGuard')">×</div></div>
+  <input type="hidden" id="eGuardId">
+  <div class="form-row">
+    <div class="form-group"><label>Guard Name *</label><input type="text" id="guardNameI" maxlength="60"></div>
+    <div class="form-group"><label>Mobile *</label><input type="tel" id="guardMobI" maxlength="10" placeholder="10-digit"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>KAP Location *</label><select id="guardLocS"></select></div>
+    <div class="form-group"><label>Shift</label><select id="guardShiftS"><option value="">-- Select --</option><option value="Day">Day (6am–6pm)</option><option value="Night">Night (6pm–6am)</option><option value="General">General</option></select></div>
+  </div>
+  <div class="form-group"><label>Email</label><input type="email" id="guardEmailI" placeholder="Optional"></div>
+  <!-- Photo -->
+  <div class="form-group"><label>Photo</label>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div id="guardPhotoThumb" class="u-thumb-lg" style="cursor:pointer" onclick="document.getElementById('guardPhotoFile').click()">🧑</div>
+      <input type="file" id="guardPhotoFile" accept="image/*" capture="environment" style="display:none" onchange="_guardOnPhoto(this)">
+      <button type="button" id="guardPhotoClear" class="btn btn-secondary" style="font-size:11px;padding:4px 8px;display:none" onclick="_guardClearPhoto()">✕ Remove</button>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group" style="flex-direction:row;align-items:center;gap:8px;padding:4px 0">
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-weight:600;color:var(--text)"><input type="checkbox" id="guardInactive" style="width:16px;height:16px;cursor:pointer;accent-color:#dc2626"> <span style="color:#dc2626">Mark as Inactive</span></label>
+    </div>
+  </div>
+  <div class="modal-footer" style="flex-wrap:wrap"><div class="modal-err" id="merr_mGuard"></div><button class="btn btn-secondary" onclick="cm('mGuard')">Cancel</button><button class="btn btn-primary" onclick="saveGuard()">Save</button></div>
+</div></div>
+
+<div class="modal-overlay" id="mRoundSchedule" style="display:none"><div class="modal" style="width:540px"><div class="modal-header"><div class="modal-title" id="mRSTitle">Add Round Schedule</div><div class="modal-close" onclick="cm('mRoundSchedule')">×</div></div>
+  <input type="hidden" id="eRSid">
+  <div class="form-group"><label>Schedule Name *</label><input type="text" id="rsNameI" placeholder="e.g. Night Patrol – KAP1" maxlength="80"></div>
+  <div class="form-row">
+    <div class="form-group"><label>KAP Location *</label><select id="rsLocS" onchange="onRSLocChange()"></select></div>
+    <div class="form-group"><label>Assigned Guard</label><select id="rsGuardS"><option value="">-- Unassigned --</option></select></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Start Time *</label><input type="time" id="rsStartI" value="06:00"></div>
+    <div class="form-group"><label>End Time *</label><input type="time" id="rsEndI" value="18:00"></div>
+  </div>
+  <div class="form-group"><label>Frequency *</label><select id="rsFreqS"><option value="Daily">Daily</option><option value="Weekly">Weekly</option><option value="Custom">Custom</option></select></div>
+  <div class="form-group"><label>Checkpoints to Cover *</label>
+    <div id="rsCPList" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;background:var(--surface2)">
+      <div style="color:var(--text3);font-size:12px;text-align:center;padding:8px">Select a location first</div>
+    </div>
+    <div class="form-hint">Select checkpoints for this round (in order)</div>
+  </div>
+  <div class="form-row">
+    <div class="form-group" style="flex-direction:row;align-items:center;gap:8px;padding:4px 0">
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-weight:600;color:var(--text)"><input type="checkbox" id="rsInactive" style="width:16px;height:16px;cursor:pointer;accent-color:#dc2626"> <span style="color:#dc2626">Mark as Inactive</span></label>
+    </div>
+  </div>
+<!-- SPOT ENTRY EDIT MODAL -->
+<div class="modal-overlay" id="mSpotEdit" style="display:none;align-items:center!important"><div class="modal" style="width:min(420px,95vw);border-radius:16px">
+  <div class="modal-header"><div class="modal-title">✏ Edit Spot Entry</div><div class="modal-close" onclick="cm('mSpotEdit')">×</div></div>
+  <input type="hidden" id="seEditId">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 0">
+    <div class="form-group" style="margin-bottom:0;grid-column:1/-1"><label style="font-size:10px;font-weight:700;color:#000">VEHICLE NO. *</label><input type="text" id="seVehNum" oninput="fmtVehNum(this)" maxlength="13" style="font-family:var(--mono);letter-spacing:1px;text-transform:uppercase;padding:6px 10px;font-size:14px"></div>
+    <div class="form-group" style="margin-bottom:0"><label style="font-size:10px;font-weight:700;color:#000">DRIVER NAME</label><input type="text" id="seDriverName" placeholder="Name" style="padding:6px 10px;font-size:13px"></div>
+    <div class="form-group" style="margin-bottom:0"><label style="font-size:10px;font-weight:700;color:#000">MOBILE</label><input type="tel" id="seDriverMob" maxlength="10" placeholder="10 digits" style="padding:6px 10px;font-size:13px"></div>
+    <div class="form-group" style="margin-bottom:0"><label style="font-size:10px;font-weight:700;color:#000">SUPPLIER</label><input type="text" id="seSupplier" placeholder="Supplier" style="padding:6px 10px;font-size:13px"></div>
+    <div class="form-group" style="margin-bottom:0"><label style="font-size:10px;font-weight:700;color:#000">CHALLAN NO.</label><input type="text" id="seChallan" placeholder="Challan" style="padding:6px 10px;font-size:13px"></div>
+    <div class="form-group" style="margin-bottom:0;grid-column:1/-1"><label style="font-size:10px;font-weight:700;color:#000">REMARKS</label><input type="text" id="seRemarks" placeholder="Optional" style="padding:6px 10px;font-size:13px"></div>
+  </div>
+  <div class="modal-footer" style="border-top:1px solid var(--border);padding-top:10px;margin-top:8px">
+    <div class="modal-err" id="merr_mSpotEdit"></div>
+    <button class="btn btn-secondary" onclick="cm('mSpotEdit')">Cancel</button>
+    <button class="btn btn-primary" onclick="saveSpotEdit()">💾 Save</button>
+  </div>
+</div></div>
+<div class="modal-overlay" id="mConfirm" style="display:none">
+  <div class="modal" style="width:380px;text-align:center">
+    <div style="font-size:40px;margin-bottom:8px">🗑️</div>
+    <div class="modal-title" style="justify-content:center;font-size:17px;margin-bottom:6px">Delete this item?</div>
+    <div id="confirmMsg" style="font-size:13px;color:var(--text2);margin-bottom:20px">This action cannot be undone.</div>
+    <div class="modal-footer" style="justify-content:center;gap:12px">
+      <button class="btn btn-secondary" onclick="cm('mConfirm')" style="min-width:100px">Cancel</button>
+      <button class="btn btn-danger" id="btnConfirmOk" style="min-width:100px">🗑 Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ERROR MODAL (cannot delete — record in use) -->
+<div class="modal-overlay" id="mError" style="display:none">
+  <div class="modal" style="width:420px;text-align:center">
+    <div style="font-size:40px;margin-bottom:8px">⚠️</div>
+    <div class="modal-title" style="justify-content:center;font-size:17px;margin-bottom:6px;color:#dc2626">Cannot Delete</div>
+    <div id="errorMsg" style="font-size:13px;color:var(--text2);margin-bottom:20px;text-align:left;background:var(--surface2);border-radius:8px;padding:12px 16px;line-height:1.7"></div>
+    <div class="modal-footer" style="justify-content:center">
+      <button class="btn btn-primary" onclick="cm('mError')" style="min-width:120px">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- APPROVE ACTION MODAL -->
+<div class="modal-overlay" id="mDeleteTrip" style="display:none">
+  <div class="modal" style="width:420px;text-align:center">
+<div id="_globalSpin" style="display:none;position:fixed;inset:0;z-index:999999;background:rgba(15,23,42,.5);align-items:center;justify-content:center;flex-direction:column;gap:10px"><div style="width:40px;height:40px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite"></div><div id="_spinMsg" style="color:#fff;font-size:13px;font-weight:600">Working…</div></div>
+
+<script async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="myApps_Common_v18.js"></script>
+<script>
+if(typeof _COMMON_LOADED==='undefined'){
+  document.body.style.display='';
+  document.body.innerHTML='<div style="padding:40px;text-align:center;font-family:sans-serif;max-width:500px;margin:60px auto"><h2 style="color:#dc2626">⚠ Failed to load myApps_Common.js</h2><p style="color:#64748b">Make sure all files are in the same folder.</p></div>';
+  throw new Error('myApps_Common.js not loaded');
+}
+
+// ═══ SECURITY MODULE NAVIGATION ═══
+function secGo(pageId){
+  document.querySelectorAll('#secApp .page').forEach(function(p){p.classList.remove('active');p.style.display='none';});
+  var pg=document.getElementById(pageId);
+  if(pg){pg.classList.add('active');pg.style.display='block';}
+  var ptEl=pg&&pg.querySelector('.page-title');
+  var tbt=document.getElementById('secPageTitle');
+  if(tbt&&ptEl) tbt.textContent=ptEl.textContent;
+  document.querySelectorAll('.sec-nav-item').forEach(function(n){n.classList.remove('active');});
+  var navMap={pageKapSecurity:'nKapSec',pageCheckpoints:'nCheckpoints',pageGuards:'nGuards',pageRoundSchedules:'nRoundSchedules'};
+  var ni=document.getElementById(navMap[pageId]);if(ni)ni.classList.add('active');
+  closeSecNav();
+  var renderMap={
+    pageKapSecurity: function(){ if(typeof renderKapPage==='function') renderKapPage(); },
+    pageCheckpoints: function(){ if(typeof renderCheckpoints==='function') renderCheckpoints(); },
+    pageGuards: function(){ if(typeof renderGuards==='function') renderGuards(); },
+    pageRoundSchedules: function(){ if(typeof renderRoundSchedules==='function') renderRoundSchedules(); }
+  };
+  if(renderMap[pageId]) renderMap[pageId]();
+}
+function toggleSecNav(){ document.getElementById('secSidebar').classList.toggle('open'); document.getElementById('secOverlay').classList.toggle('show'); }
+function closeSecNav(){ document.getElementById('secSidebar').classList.remove('open'); document.getElementById('secOverlay').classList.remove('show'); }
+function secLogout(){
+  CU=null; _sessionDel('kap_session_user'); _sessionDel('kap_session_pass');
+  try{localStorage.removeItem('kap_rm_user');localStorage.removeItem('kap_rm_pass');}catch(e){}
+  _navigateTo('myApps_Portal_v18.html');
+}
+
+// ═══ UTILITY STUBS (VMS functions referenced by security code) ═══
+function _isMobileOrTablet(){ return /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (navigator.maxTouchPoints>0&&/Macintosh/i.test(navigator.userAgent)); }
+function _applyPhotoInputMode(){ document.querySelectorAll('input[type=file][accept*=image]').forEach(function(inp){ if(_isMobileOrTablet())inp.setAttribute('capture','environment'); else inp.removeAttribute('capture'); }); }
+function _photoAccept(){ return 'image/*'; }
+function showPage(pid){ secGo(pid); }
+function renderDash(){}
+function renderMyTrips(){}
+function updBadges(){}
+function tripsForMyPlant(){ return DB.trips||[]; }
+function getVisibleTrips(){ return DB.trips||[]; }
+
+// ═══ CAMERA / PHOTO ═══
+// ===== CAMERA / PHOTO CAPTURE =====
+let _kapStream = null;
+let _kapPhotoData = null; // base64 data URL of captured/chosen photo
+
+// Open camera stream — single getUserMedia call, handles all permission errors
+function _openCamStream(constraints){
+  if(!navigator.mediaDevices?.getUserMedia){
+    notify('Camera not supported on this device/browser.',true);
+    return Promise.resolve(null);
+  }
+  return navigator.mediaDevices.getUserMedia(constraints).catch(err=>{
+    if(err.name==='NotAllowedError'||err.name==='PermissionDeniedError')
+      notify('Camera permission denied. Tap Allow when prompted, or enable camera in your browser/phone settings.',true);
+    else if(err.name==='NotFoundError'||err.name==='DevicesNotFoundError')
+      notify('No camera found on this device.',true);
+    else if(err.name==='NotReadableError'||err.name==='TrackStartError')
+      notify('Camera is in use by another app. Please close it and try again.',true);
+    else
+      notify('Camera error: '+(err.message||err.name||'unknown'),true);
+    return null;
+  });
+}
+
+function openCamera(){
+  const inp=document.getElementById('kapFileInput');
+  if(!inp) return;
+  if(_isMobileOrTablet()){
+    inp.setAttribute('capture','environment');
+  } else {
+    inp.removeAttribute('capture');
+  }
+  inp.click();
+}
+
+function stopCamera(){
+  if(_kapStream){ _kapStream.getTracks().forEach(t=>t.stop()); _kapStream=null; }
+  const cb=document.getElementById('kapCamBox');if(cb)cb.style.display='none';
+  const pb=document.getElementById('kapPhotoButtons');if(pb)pb.style.display='flex';
+}
+
+function snapPhoto(){
+  const vid = document.getElementById('kapVideo');
+  const canvas = document.getElementById('kapCanvas');
+  if(!vid||!canvas)return;
+  canvas.width = vid.videoWidth;
+  canvas.height = vid.videoHeight;
+  canvas.getContext('2d').drawImage(vid, 0, 0);
+  // Show preview immediately at full quality, then compress to <200KB
+  _kapPhotoData = canvas.toDataURL('image/jpeg', 0.82);
+  stopCamera();
+  showPreview(_kapPhotoData);
+  // Compress to a Blob then re-encode
+  canvas.toBlob(blob=>{
+    if(!blob)return;
+    compressImage(blob instanceof File?blob:new File([blob],'snap.jpg',{type:'image/jpeg'}))
+      .then(c=>{_kapPhotoData=c;})
+      .catch(()=>{});
+  },'image/jpeg',0.82);
+}
+
+function onFileChosen(input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    _kapPhotoData = e.target.result; // set immediately for preview
+    showPreview(_kapPhotoData);
+    compressImage(file).then(c=>{_kapPhotoData=c;}).catch(()=>{});
+  };
+  reader.readAsDataURL(file);
+}
+
+function showPreview(src){
+  const pi=document.getElementById('kapPreviewImg');if(pi)pi.src=src;
+  const pp=document.getElementById('kapPhotoPreview');if(pp)pp.style.display='block';
+  const pb=document.getElementById('kapPhotoButtons');if(pb)pb.style.display='none';
+}
+
+function clearPhoto(){
+  _kapPhotoData = null;
+  const pi=document.getElementById('kapPreviewImg');if(pi)pi.src='';
+  const pp=document.getElementById('kapPhotoPreview');if(pp)pp.style.display='none';
+  const pb=document.getElementById('kapPhotoButtons');if(pb)pb.style.display='flex';
+  const fi=document.getElementById('kapFileInput');if(fi)fi.value='';
+}
+
+// ── Reusable Camera Capture (for Trip Booking + KAP Security photo buttons) ──
+let _camCaptureStream=null;
+let _camCaptureCallback=null;
+let _photoChoiceFileId=null;
+let _photoChoiceThumbId=null;
+let _photoChoiceCb=null;
+
+// Show camera/gallery choice sheet. fileInputId = hidden file input, thumbId = thumbnail element,
+// onDone(dataUrl) = callback with compressed photo data
+// Detect mobile/tablet (touch + small screen OR iOS/Android user agent)
+function _isMobileOrTablet(){
+  if('ontouchstart' in window && window.innerWidth<=1024) return true;
+  return /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+function _showPhotoChoice(fileInputId, thumbId, onDone){
+  _photoChoiceFileId=fileInputId;
+  _photoChoiceThumbId=thumbId;
+  _photoChoiceCb=onDone;
+  const inp=document.getElementById(fileInputId);
+  if(!inp) return;
+  if(_isMobileOrTablet()){
+    // Mobile/Tablet: open native device camera directly
+    inp.setAttribute('capture','environment');
+  } else {
+    // Desktop: open file picker
+    inp.removeAttribute('capture');
+  }
+  inp.click();
+}
+
+function _photoChoiceCam(){
+  cm('mPhotoChoice');
+  // Fallback: trigger file input with capture
+  const inp=document.getElementById(_photoChoiceFileId);
+  if(inp){ inp.setAttribute('capture','environment'); inp.click(); }
+}
+
+function _photoChoiceGallery(){
+  cm('mPhotoChoice');
+  const inp=document.getElementById(_photoChoiceFileId);
+  if(inp){ inp.removeAttribute('capture'); inp.click(); }
+}
+
+function _snapCamCapture(){
+  const vid=document.getElementById('_camVid');
+  const canvas=document.getElementById('_camCanvas');
+  if(!vid||!canvas){_closeCamCapture();return;}
+  canvas.width=vid.videoWidth||640;
+  canvas.height=vid.videoHeight||480;
+  canvas.getContext('2d').drawImage(vid,0,0);
+  const fullQ=canvas.toDataURL('image/jpeg',0.82);
+  _closeCamCapture();
+  // Show in thumbnail immediately
+  if(_photoChoiceThumbId){
+    const thumb=document.getElementById(_photoChoiceThumbId);
+    if(thumb){
+      thumb.innerHTML='<img src="'+fullQ+'" style="width:100%;height:100%;object-fit:cover">';
+      thumb.classList&&thumb.classList.add('has-photo');
+      if(thumb.style)thumb.style.border='2px solid var(--green)';
+    }
+  }
+  // Compress in background then call back
+  canvas.toBlob(blob=>{
+    if(!blob)return;
+    const file=new File([blob],'cam.jpg',{type:'image/jpeg'});
+    compressImage(file).then(c=>{
+      if(_camCaptureCallback)_camCaptureCallback(c);
+      // Also store on the file input element for compatibility
+      if(_photoChoiceFileId){
+        const inp=document.getElementById(_photoChoiceFileId);
+        if(inp)inp._compressedData=c;
+        if(inp)inp._photoData=c;
+      }
+    }).catch(()=>{
+      if(_camCaptureCallback)_camCaptureCallback(fullQ);
+    });
+  },'image/jpeg',0.82);
+}
+
+function _closeCamCapture(){
+  if(_camCaptureStream){_camCaptureStream.getTracks().forEach(t=>t.stop());_camCaptureStream=null;}
+  const vid=document.getElementById('_camVid');if(vid)vid.srcObject=null;
+  cm('mCamCapture');
+}
+
+function closeKapModal(){
+  stopCamera();
+  clearPhoto();
+  cm('mKap');
+}
+
+// Returns trips visible to the current user based on role & location assignment
+
+// ═══ KAP SECURITY GATE OPS + SPOT ENTRY ═══
+let _kapMode='landing'; // 'landing', 'prebooked' or 'spot'
+function renderKapPage(){
+  setKapMode(_kapMode||'landing'); // preserve current mode, don't reset to landing
+}
+function setKapMode(mode){
+  _kapMode=mode;
+  const landing=document.getElementById('kapLanding');
+  const preSec=document.getElementById('kapPreBookedSection');
+  const spotSec=document.getElementById('kapSpotSection');
+  if(landing)landing.style.display=mode==='landing'?'block':'none';
+  if(preSec)preSec.style.display=mode==='prebooked'?'block':'none';
+  if(spotSec)spotSec.style.display=mode==='spot'?'block':'none';
+  if(mode==='prebooked'){
+    renderKap();
+  } else if(mode==='spot'){
+    // Show user's location in spot section header
+    const mySpotLoc=byId(DB.locations,CU.plant);
+    const locBadge=document.getElementById('spotLocBadge');
+    if(locBadge){
+      if(mySpotLoc){
+        const c=mySpotLoc.colour||'var(--accent)';const tc=colourContrast(mySpotLoc.colour||'');
+        locBadge.style.cssText=`font-size:11px;font-weight:700;padding:1px 8px;border-radius:5px;background:${c};color:${tc}`;
+        locBadge.textContent=mySpotLoc.name;
+      } else {locBadge.textContent='';}
+    }
+    renderSpotTab();
+  }
+  // Update button badges
+  const isSA=CU.roles.includes('Super Admin')||CU.roles.includes('Admin');
+  const preCount=DB.segments.filter(s=>{
+    if(s.status==='Completed'||s.status==='Locked')return false;
+    const cs=s.currentStep;
+    if(cs===1||cs===2){if(s.steps[cs]?.skip)return false;return canDoStep(s,cs);}
+    // Also count step 5 (Empty Vehicle Exit)
+    if(!s.steps[5]?.skip&&!s.steps[5]?.done&&stepsOneAndTwoDone(s))return canDoStep(s,5);
+    return false;
+  }).length;
+  const _mySpotL=byId(DB.locations,CU.plant);
+  const spotPending=(DB.spotTrips||[]).filter(s=>{
+    if(s.exitTime)return false;
+    if(isSA)return true;
+    return CU.plant&&s.location===CU.plant;
+  }).length;
+  const setPre=document.getElementById('kapCountPrebooked');
+  const setSpot=document.getElementById('kapCountSpotBtn');
+  if(setPre){setPre.textContent=preCount||'';setPre.style.display=preCount?'inline-flex':'none';}
+  if(setSpot){setSpot.textContent=spotPending||'';setSpot.style.display=spotPending?'inline-flex':'none';}
+}
+
+// ===== KAP SECURITY =====
+function renderKap(){
+  initDfMonth('kapHist','kapHistFrom','kapHistTo');
+  const srch=(document.getElementById('kapSearch')?.value||'').toLowerCase();
+  const isSA=CU.roles.includes('Super Admin')||CU.roles.includes('Admin');
+
+  // Init date range defaults (1 week) if not set
+  const now=new Date();
+  const feKap=document.getElementById('kapHistFrom');const teKap=document.getElementById('kapHistTo');
+  if(feKap&&!feKap.value){
+    const from7=new Date(now);from7.setDate(now.getDate()-7);
+    feKap.value=`${from7.getFullYear()}-${String(from7.getMonth()+1).padStart(2,'0')}-${String(from7.getDate()).padStart(2,'0')}`;
+    updDateBtnLbl('kapHistFrom');
+  }
+  if(teKap&&!teKap.value){
+    teKap.value=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    updDateBtnLbl('kapHistTo');
+  }
+  const fromVal=feKap?.value||'';
+  const toVal=teKap?.value||'';
+
+  // All active (pending) segments across both steps — show ALL until recorded
+  let allPending=DB.segments.filter(s=>{
+    if(s.status==='Completed'||s.status==='Locked')return false;
+    const cs=s.currentStep;
+    // Steps 1 & 2: sequential KAP gate actions
+    if(cs===1||cs===2){if(s.steps[cs]?.skip)return false;return canDoStep(s,cs);}
+    // Step 5: parallel Empty Vehicle Exit — available as soon as steps 1 & 2 are done
+    if(!s.steps[5]?.skip&&!s.steps[5]?.done&&stepsOneAndTwoDone(s))return canDoStep(s,5);
+    return false;
+  });
+  if(srch)allPending=allPending.filter(s=>s.id.toLowerCase().includes(srch)||vnum(byId(DB.trips,s.tripId)?.vehicleId).toLowerCase().includes(srch));
+
+  // Update tab counts (both tabs always)
+  const isStep5=(s)=>!s.steps[5]?.skip&&!s.steps[5]?.done&&stepsOneAndTwoDone(s);
+  const exitCount=allPending.filter(s=>s.currentStep===1||isStep5(s)).length;
+  const entryCount=allPending.filter(s=>s.currentStep===2||isStep5(s)).length;
+  const ce=document.getElementById('kapCountExit');
+  const cn=document.getElementById('kapCountEntry');
+  if(ce){ce.textContent=exitCount||'';ce.style.display=exitCount?'inline-flex':'none';}
+  if(cn){cn.textContent=entryCount||'';cn.style.display=entryCount?'inline-flex':'none';}
+
+  const step=_kapActiveTab; // 1=exit, 2=entry
+  const pendingSegs=allPending.filter(s=>step===1?(s.currentStep===1||isStep5(s)):(s.currentStep===2||isStep5(s)));
+
+  // ── Pending section ──
+  let pendingHtml='';
+  if(pendingSegs.length){
+    pendingHtml+=pendingSegs.map((seg,_idx)=>{
+      const serialNo=pendingSegs.length-_idx; // descending
+      const cs=seg.currentStep;
+      const sid=seg.id.replace(/-/g,'_');
+      const trip=byId(DB.trips,seg.tripId);
+      const drv=byId(DB.drivers,trip?.driverId);
+      const vehNum=vnum(trip?.vehicleId);
+      const _isStep5=isStep5(seg);
+      const btnCls=cs===1?'btn-danger':_isStep5?'btn-primary':'btn-green';
+      const btnLabel=cs===1?'Record Gate Exit':_isStep5?'📤 Record Empty Vehicle Exit':'Record Gate Entry';
+
+      // Check if ANY segment of this trip has had first action
+      const allTripSegs=DB.segments.filter(s=>s.tripId===seg.tripId);
+      const anySegStarted=allTripSegs.some(s=>[1,2,3,4].some(n=>s.steps[n]?.done));
+      const hasVeh=vehNum&&vehNum!=='-';
+
+      // Vehicle badge: always read-only on KAP page
+      let vehBadge=hasVeh
+        ?`<span style="font-family:var(--mono);font-size:clamp(14px,4vw,28px);font-weight:900;color:var(--text);background:#fef08a;border:2px solid #ca8a04;border-radius:8px;padding:2px 10px;flex-shrink:0;white-space:nowrap">${vehNum}</span>`
+        :`<span class="flash-red" style="font-family:var(--mono);font-size:24px;font-weight:900;border-radius:8px;padding:2px 10px;flex-shrink:0">No Vehicle</span>`;
+
+      // Build all segment rows
+      const allSegDests=[[trip?.startLoc,trip?.dest1,'A',1]];
+      if(trip?.dest2)allSegDests.push([trip.dest1,trip.dest2,'B',2]);
+      if(trip?.dest3)allSegDests.push([trip.dest2,trip.dest3,'C',3]);
+
+      // Compact route summary with challan
+      const routeSummary=allSegDests.map(([from,to,lbl,idx])=>{
+        const ch=trip?.['challan'+idx]||'';
+        const clr={A:'#35b0b6',B:'#14b8a6',C:'#8b5cf6'}[lbl]||'var(--accent)';
+        return `<span style="display:inline-flex;align-items:center;gap:3px;white-space:nowrap">`
+          +`<span style="width:16px;height:16px;border-radius:50%;background:${clr};color:#fff;font-size:8px;font-weight:900;display:inline-flex;align-items:center;justify-content:center">${lbl}</span>`
+          +`<span style="font-size:11px">${lnameText(from)} ⟶ ${lnameText(to)}</span>`
+          +(ch?`<span style="font-size:10px;font-weight:700;background:#f0fafa;border:1px solid #b3dfe0;padding:0 4px;border-radius:3px;color:#1d6f73">📄${ch}</span>`:'')
+          +`</span>`;
+      }).join('<span style="font-size:10px;color:var(--text3);margin:0 3px">|</span>');
+
+      const segRows=allSegDests.map(([from,to,lbl,idx])=>{
+        const _seg=DB.segments.find(ss=>ss.tripId===seg.tripId&&ss.label===lbl);
+        const ch=trip?.['challan'+idx]||'';
+        const wt=trip?.['weight'+idx]||'';
+        const ph=trip?.['photo'+idx];
+        const _isActive=lbl===seg.label;
+        const _segStarted=_seg&&[1,2,3,4].some(n=>_seg.steps[n]?.done);
+        const _kapDone=_seg&&[1,2].every(n=>_seg.steps[n]?.done||_seg.steps[n]?.skip);
+        const _rowClass=_isActive?'kap-row-active':_kapDone?'kap-row-done':'';
+        const clr={A:'#35b0b6',B:'#14b8a6',C:'#8b5cf6'}[lbl]||'var(--accent)';
+
+        let nextStepLabel='';
+        if(_seg){
+          if(_seg.status==='Completed') nextStepLabel='<span class="badge badge-green" style="font-size:9px">✓ Done</span>';
+          else if(_seg.status==='Locked') nextStepLabel='<span style="font-size:10px;color:var(--text3)">🔒</span>';
+          else if(_seg.status==='Rejected') nextStepLabel='<span class="badge badge-red" style="font-size:9px">⚠</span>';
+          else{
+            const sn={1:'Gate Exit',2:'Gate Entry',3:'Mat.Receipt',4:'Trip Approval',5:'Empty Exit'};
+            const si={1:'🚪',2:'🏁',3:'📦',4:'✅'};
+            nextStepLabel=`<span class="flash-green">${si[_seg.currentStep]||''} ${sn[_seg.currentStep]||''}</span>`;
+          }
+        }
+
+        // KAP page: challan is always read-only; show all challans for this segment
+        const _t2=byId(DB.trips,seg.tripId);
+        const challansArrKap=(_t2&&_t2['challans'+idx]&&_t2['challans'+idx].length?_t2['challans'+idx]:[]);
+        const challanDisplay=challansArrKap.length
+          ?challansArrKap.map(c2=>`<span style="font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border);padding:2px 5px;border-radius:5px;white-space:nowrap">📄 ${c2.no}${c2.weight?' · '+c2.weight+'kg':''}</span>`).join(' ')
+          :ch
+            ?`<span style="font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border);padding:2px 7px;border-radius:5px">📄 ${ch}</span>`
+            :`<span class="flash-red" style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px">⚠ No Challan</span>`;
+
+        return `<div class="${_rowClass}" style="padding:5px 10px;border-bottom:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span style="width:20px;height:20px;border-radius:50%;background:${clr};color:#fff;font-size:10px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">${lbl}</span>
+            <span style="font-size:12px;font-weight:700">${lnameText(from)}</span>
+            <span style="color:var(--accent);font-weight:900;font-size:13px">⟶</span>
+            <span style="font-size:12px;font-weight:700">${lnameText(to)}</span>
+            ${challanDisplay}
+    
+            ${ph?`<img src="${ph}" onclick="openPhoto(this.src)" style="width:22px;height:22px;object-fit:cover;border-radius:3px;border:1px solid var(--border2);cursor:pointer">`:''}
+            <span style="margin-left:auto">${nextStepLabel}</span>
+          </div>
+        </div>`;
+      }).join('');
+
+      // Gate Exit disabled if no challan for this segment
+      const _segIdx={'A':1,'B':2,'C':3}[seg.label]||1;
+      const _tripForCh=byId(DB.trips,seg.tripId);
+      const _chArr=_tripForCh?.['challans'+_segIdx]||[];
+      const _hasChallan=(_chArr.some&&_chArr.some(x=>x.no&&x.no.trim()))||!!(_tripForCh?.['challan'+_segIdx]||'').trim();
+      const _gateExitBlocked=cs===1&&!_hasChallan;
+      const pendId='kpend_'+sid;
+      const vn=vnum(trip?.vehicleId);
+      // Coloured location pills for route
+      const routePills=allSegDests.map(([from,to,lbl,idx],i)=>{
+        const lf=byId(DB.locations,from),lt=byId(DB.locations,to);
+        const cf=lf?.colour||'var(--accent)',ct=lt?.colour||'var(--accent)';
+        return (i===0
+          ?`<span style="background:${cf};color:${colourContrast(cf)};padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap">${lf?.name||'?'}</span>`
+          :'')
+          +`<span style="color:var(--accent);font-weight:900;font-size:11px;margin:0 2px">⟶</span>`
+          +`<span style="background:${ct};color:${colourContrast(ct)};padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap">${lt?.name||'?'}</span>`;
+      }).join('');
+
+      const cardBorderClr=cs===1?'#dc2626':_isStep5?'#ea580c':'#16a34a';
+      const actionBadge=_isStep5
+        ?`<div style="padding:2px 10px 4px"><span style="display:inline-flex;align-items:center;gap:4px;background:#fff7ed;border:1.5px solid #fb923c;color:#c2410c;font-size:11px;font-weight:800;padding:3px 10px;border-radius:6px;animation:flashOrange 1.2s ease-in-out infinite">📤 Empty Vehicle Exit</span></div>`
+        :cs===1
+          ?`<div style="padding:2px 10px 4px"><span style="display:inline-flex;align-items:center;gap:4px;background:#fef2f2;border:1.5px solid #fca5a5;color:#dc2626;font-size:11px;font-weight:800;padding:3px 10px;border-radius:6px">🚪 Gate Exit — Seg ${seg.label}</span></div>`
+          :`<div style="padding:2px 10px 4px"><span style="display:inline-flex;align-items:center;gap:4px;background:#f0fdf4;border:1.5px solid #86efac;color:#16a34a;font-size:11px;font-weight:800;padding:3px 10px;border-radius:6px">🏁 Gate Entry — Seg ${seg.label}</span></div>`;
+      return `<div style="margin-bottom:6px">
+        <div class="seg-card" style="padding:0;overflow:hidden;cursor:pointer;border:2px solid ${cardBorderClr};border-radius:10px" onclick="toggleKapHistCard('${pendId}')">
+        <!-- Row 1: Trip ID + Vehicle + chevron -->
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 10px 0;min-width:0;flex-wrap:nowrap">
+          <span style="font-family:var(--mono);font-size:22px;font-weight:900;color:#fff;background:var(--accent);padding:2px 12px;border-radius:8px;flex-shrink:0;letter-spacing:.5px">${trip?.id||seg.tripId}</span>
+          ${vehBadge}
+        </div>
+        <!-- Row 2: Action type badge -->
+        ${actionBadge}
+        <!-- Row 3: Booked by -->
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:3px 10px 4px;font-size:12px">${(()=>{const bu=byId(DB.users,trip?.bookedBy);const bn=bu?.fullName||bu?.name||'';return `<span style="color:var(--text3)">Booked by:</span><span style="font-weight:700;color:var(--text2)">${bn||'—'}</span><span style="color:var(--border2)">·</span><span style="color:var(--text3)">📅 ${fdt(trip?.date||'')}</span>`;})()}</div>
+        <!-- Line 3: Coloured route pills -->
+        <div style="padding:2px 10px 8px;display:flex;flex-wrap:wrap;gap:3px;align-items:center">${routePills}</div>
+        <!-- Expanded: split rows + action -->
+        <div id="${pendId}" style="display:none;border-top:1px solid var(--border)" onclick="event.stopPropagation()">
+          ${segRows}
+          <!-- Action row -->
+          <div style="border-top:2px solid var(--accent);padding:8px 10px">
+            <div id="camBox_${sid}" style="display:none;flex-direction:column;gap:4px;margin-bottom:6px">
+              <video id="vid_${sid}" autoplay playsinline style="width:100%;max-height:110px;border-radius:6px;border:1px solid var(--border2);background:#000;object-fit:cover"></video>
+              <div style="display:flex;gap:4px">
+                <button class="btn btn-primary" onclick="snapInline('${sid}')" style="flex:1;font-size:11px;padding:4px">📸 Snap</button>
+                <button class="btn btn-secondary" onclick="stopInlineCam('${sid}')" style="flex:1;font-size:11px;padding:4px">✕ Close</button>
+              </div>
+            </div>
+            <canvas id="cnv_${sid}" style="display:none"></canvas>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <div style="position:relative;flex:1;min-width:52px;max-width:120px">
+                <div id="thumbEmpty_${sid}" onclick="showThumbPicker('${sid}')" title="Capture Vehicle Photo" style="width:100%;height:52px;border-radius:10px;border:3px dashed var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:22px;background:rgba(42,154,160,.06);color:var(--accent);font-weight:900;box-sizing:border-box">📷</div>
+                <img id="thumbImg_${sid}" style="display:none;width:100%;height:52px;object-fit:cover;border-radius:10px;border:3px solid var(--green);cursor:pointer;box-sizing:border-box" onclick="showThumbPicker('${sid}')" title="Tap to change">
+                <button id="thumbClear_${sid}" onclick="clearInlinePhoto('${sid}')" style="display:none;position:absolute;top:-6px;right:-6px;background:#dc2626;color:#fff;border:none;border-radius:50%;width:16px;height:16px;cursor:pointer;font-size:10px;line-height:16px;text-align:center;padding:0">×</button>
+                <div id="thumbPicker_${sid}" style="display:none;position:fixed;z-index:9999;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.2);padding:6px;white-space:nowrap">
+                  <div onclick="openInlineCam('${sid}')" style="padding:6px 12px;cursor:pointer;font-size:12px;border-radius:4px;display:flex;align-items:center;gap:6px" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">📷 Camera</div>
+                  <label style="padding:6px 12px;cursor:pointer;font-size:12px;border-radius:4px;display:flex;align-items:center;gap:6px;margin:0" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">🖼 File<input type="file" accept="${_photoAccept()}" capture="environment" style="display:none" onchange="onInlineFile(this,'${sid}')"></label>
+                </div>
+              </div>
+              ${(()=>{
+                const _noVeh=!hasVeh;
+                const _noCh=_gateExitBlocked;
+                const _warn=cs===1&&(_noVeh||_noCh)
+                  ?`<div style="width:100%;text-align:center;margin-top:4px"><span class="flash-red" style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px">⚠ ${_noVeh&&_noCh?'Add Vehicle & Challan':_noVeh?'Add Vehicle':'Add Challan'} before Gate Exit</span></div>`
+                  :'';
+                const _btn=_gateExitBlocked
+                  ?`<button class="btn btn-danger" disabled style="height:52px;padding:0 18px;font-size:13px;font-weight:800;opacity:.4;cursor:not-allowed;white-space:nowrap">${btnLabel}</button>`
+                  :`<button class="btn ${btnCls}" onclick="doKapInline('${seg.id}',${_isStep5?5:cs})" style="height:52px;padding:0 18px;font-size:13px;font-weight:800;white-space:nowrap">${btnLabel}</button>`;
+                return _btn+_warn;
+              })()}
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  } else {
+    pendingHtml=`<div class="empty-state" style="padding:16px 0">No pending ${step===1?'Gate Exit':'Gate Entry'} actions</div>`;
+  }
+  document.getElementById('kapPendingContent').innerHTML=pendingHtml;
+  // Auto-expand first pending card
+  (()=>{
+    const first=document.querySelector('#kapPendingContent [id^="kpend_"]');
+    if(first&&first.style.display==='none'){
+      first.style.display='block';
+    }
+  })();
+
+  // ── History section for this step ──
+  let histSegs=DB.segments.filter(s=>{
+    const st=s.steps[step];
+    if(!st||!st.done||st.skip)return false;
+    if(isSA) return true;
+    // For exit history: only show if user is kapSec at START location
+    // For entry history: only show if user is kapSec at DEST location
+    const loc=step===1?byId(DB.locations,s.sLoc):byId(DB.locations,s.dLoc);
+    return loc?.kapSec===CU.id || st.by===CU.id; // also show if user performed the action
+  });
+  if(fromVal)histSegs=histSegs.filter(s=>(s.date||'').slice(0,10)>=fromVal);
+  if(toVal)histSegs=histSegs.filter(s=>(s.date||'').slice(0,10)<=toVal);
+  if(srch)histSegs=histSegs.filter(s=>s.tripId.toLowerCase().includes(srch)||vnum(byId(DB.trips,s.tripId)?.vehicleId).toLowerCase().includes(srch));
+  histSegs.sort((a,b)=>{
+    const ta=a.steps[step]?.time?new Date(a.steps[step].time).getTime():0;
+    const tb=b.steps[step]?.time?new Date(b.steps[step].time).getTime():0;
+    return tb-ta;
+  });
+
+  let histHtml='';
+  if(histSegs.length){
+    const fmt=t=>t?new Date(t).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:true}):'—';
+    const stepLabel=step===1?'Gate Exit':'Gate Entry';
+    const stepIcon=step===1?'🚪':'🏁';
+    const clr=step===1?'#dc2626':'#16a34a';
+    histHtml+=`<div>
+      <div style="margin-top:20px;padding-top:16px;border-top:2px solid var(--border);font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px">📋 ${stepLabel} History (${histSegs.length})</div>`;
+    histHtml+=histSegs.map(seg=>{
+      const trip=byId(DB.trips,seg.tripId);
+      const drv=byId(DB.drivers,trip?.driverId);
+      const st=seg.steps[step];
+      const byUser=byId(DB.users,st.by);
+      const byName=byUser?.fullName||byUser?.name||'—';
+      const isMine=st.by===CU.id;
+      const tripApproved=seg.steps[4]?.done;
+      const nextStepNum=step===1?2:3;
+      const canRevoke=!tripApproved&&st.done&&!seg.steps[nextStepNum]?.done&&!seg.steps[3]?.done;
+      const myStyle=isMine?'background:rgba(42,154,160,.06)':'background:rgba(0,0,0,.02)';
+      const actionLoc=step===1?seg.sLoc:seg.dLoc;
+      const actionLabel=step===1?`Exited from ${lname(seg.sLoc)}`:`Entered at ${lname(seg.dLoc)}`;
+      const hid='khist_'+seg.id.replace(/[^a-zA-Z0-9]/g,'_');
+
+      // Build all split segment rows with challan
+      const allSegDests=[[trip?.startLoc,trip?.dest1,'A',1]];
+      if(trip?.dest2)allSegDests.push([trip.dest1,trip.dest2,'B',2]);
+      if(trip?.dest3)allSegDests.push([trip.dest2,trip.dest3,'C',3]);
+
+      const splitRows=allSegDests.map(([from,to,lbl,idx])=>{
+        const _seg=DB.segments.find(ss=>ss.tripId===seg.tripId&&ss.label===lbl);
+        const ch=trip?.['challan'+idx]||'';
+        const wt=trip?.['weight'+idx]||'';
+        const ph=trip?.['photo'+idx];
+        const _isActive=lbl===seg.label;
+        const clr={A:'#35b0b6',B:'#14b8a6',C:'#8b5cf6'}[lbl]||'var(--accent)';
+        let segStatus='';
+        if(_seg){
+          if(_seg.status==='Completed') segStatus='<span class="badge badge-green" style="font-size:9px">✓ Done</span>';
+          else if(_seg.status==='Locked') segStatus='<span style="font-size:10px;color:var(--text3)">🔒</span>';
+          else if(_seg.status==='Rejected') segStatus='<span class="badge badge-red" style="font-size:9px">⚠</span>';
+          else{
+            const sn={1:'Gate Exit',2:'Gate Entry',3:'Mat.Rcpt',4:'Trip Approval',5:'Empty Exit'};
+            const si={1:'🚪',2:'🏁',3:'📦',4:'✅'};
+            segStatus=`<span class="flash-green" style="font-size:10px">${si[_seg.currentStep]||''} ${sn[_seg.currentStep]||''}</span>`;
+          }
+        }
+        const rowBg=_isActive?'background:rgba(42,154,160,.07);':'';
+        return `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid var(--border);${rowBg}flex-wrap:wrap">
+          <span style="width:18px;height:18px;border-radius:50%;background:${clr};color:#fff;font-size:9px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">${lbl}</span>
+          <span style="font-size:11px;font-weight:600">${lnameText(from)}</span>
+          <span style="color:var(--accent);font-weight:900;font-size:11px">⟶</span>
+          <span style="font-size:11px;font-weight:600">${lnameText(to)}</span>
+          ${ch?`<span style="font-size:10px;font-weight:700;background:#f0fafa;border:1px solid #b3dfe0;padding:1px 5px;border-radius:3px;color:#1d6f73;margin-left:4px">📄 ${ch}</span>`:'<span class="flash-red" style="font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;margin-left:4px">No Challan</span>'}
+          ${wt?`<span style="font-size:10px;color:var(--text2)">⚖ ${wt}kg</span>`:''}
+          ${ph?`<img src="${ph}" onclick="openPhoto(this.src)" style="width:22px;height:22px;object-fit:cover;border-radius:3px;border:1px solid var(--border2);cursor:pointer">`:''}
+          <span style="margin-left:auto">${segStatus}</span>
+        </div>`;
+      }).join('');
+
+      // Coloured route pills for history card
+      const histRoutePills=allSegDests.map(([from,to,lbl,idx],i)=>{
+        const lf=byId(DB.locations,from),lt=byId(DB.locations,to);
+        const cf=lf?.colour||'var(--accent)',ct=lt?.colour||'var(--accent)';
+        return (i===0
+          ?`<span style="background:${cf};color:${colourContrast(cf)};padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap">${lf?.name||'?'}</span>`
+          :'')
+          +`<span style="color:var(--accent);font-weight:900;font-size:11px;margin:0 2px">⟶</span>`
+          +`<span style="background:${ct};color:${colourContrast(ct)};padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap">${lt?.name||'?'}</span>`;
+      }).join('');
+
+      return `<div class="seg-card" style="padding:0;overflow:hidden;cursor:pointer;border:none;${myStyle};position:relative;padding-left:26px" onclick="toggleKapHistCard('${hid}')"><div style="position:absolute;left:0;top:0;bottom:0;width:26px;background:rgba(0,0,0,0.28);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff;user-select:none">${histSegs.length-histSegs.indexOf(seg)}</div>
+        <!-- Line 1: Trip ID + Vehicle -->
+        <div style="display:flex;align-items:center;gap:6px;padding:7px 10px 3px;min-width:0">
+          <span style="font-family:var(--mono);font-size:20px;font-weight:800;color:#fff;background:var(--accent);padding:3px 9px;border-radius:6px;flex-shrink:0;letter-spacing:.4px">${trip?.id||seg.tripId}</span>
+          <span style="font-family:var(--mono);font-size:20px;font-weight:800;color:var(--text);background:#fef08a;border:1.5px solid #ca8a04;border-radius:6px;padding:2px 8px;flex-shrink:0">${vnum(trip?.vehicleId)}</span>
+        </div>
+        <!-- Line 2: Coloured route pills -->
+        <div style="padding:2px 10px 8px;display:flex;flex-wrap:wrap;gap:3px;align-items:center">${histRoutePills}</div>
+        <!-- Expanded details -->
+        <div id="${hid}" style="display:none;border-top:1px solid var(--border)" onclick="event.stopPropagation()">
+          ${splitRows}
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:6px 10px;border-top:1px solid var(--border)">
+            <span style="font-size:10px;color:var(--text3)">${stepIcon} ${fmt(st.time)} &nbsp;·&nbsp; by <strong${isMine?' style="color:var(--accent)"':''}>${byName}${isMine?' (You)':''}</strong></span>
+            ${st.remarks?`<span style="font-size:10px;color:var(--text2)">💬 ${st.remarks}</span>`:''}
+            ${st.photo?`<img src="${st.photo}" onclick="openPhoto(this.src)" style="width:28px;height:28px;object-fit:cover;border-radius:4px;border:2px solid ${clr};cursor:pointer">`:''}
+            ${canRevoke&&(isSA||isMine)?`<button class="kap-revoke-btn" style="font-size:10px;padding:1px 6px;margin-left:auto" onclick="revokeKapStep('${seg.id}',${step})">↩ Revoke</button>`:''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    histHtml+='</div>';
+  } else {
+    histHtml=`<div><div class="empty-state">No ${step===1?'Gate Exit':'Gate Entry'} history in selected period</div></div>`;
+  }
+  document.getElementById('kapHistoryContent').innerHTML=histHtml;
+}
+
+let _kapActiveTab=1;
+const _inlineStreams={};
+const _inlinePhotos={};
+
+function toggleKapHistCard(hid){
+  const el=document.getElementById(hid);if(!el)return;
+  const isOpen=el.style.display!=='none';
+  el.style.display=isOpen?'none':'block';
+}
+
+function setKapTab(step){
+  _kapActiveTab=step;
+  document.getElementById('kapTabExit').classList.toggle('active',step===1);
+  document.getElementById('kapTabEntry').classList.toggle('active',step===2);
+  renderKap();
+}
+
+// ===== SPOT VEHICLE ENTRY =====
+function renderSpotTab(){
+  updBadges();
+  initDfMonth('spotHist','spotHistFrom','spotHistTo');
+  renderSpotHistory();
+}
+
+function onSpotPhoto(input, thumbId){
+  const f=input.files[0];if(!f)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const dataUrl=e.target.result;
+    input._compressedData=dataUrl;
+    const thumb=document.getElementById(thumbId);
+    if(thumb){
+      thumb.innerHTML='';thumb.style.border='2px solid var(--green)';
+      const img=document.createElement('img');
+      img.src=dataUrl;img.style.cssText='width:100%;height:100%;object-fit:cover;cursor:pointer;display:block';
+      img.onclick=()=>openPhoto(dataUrl);
+      thumb.appendChild(img);
+    }
+    compressImage(f).then(c=>{input._compressedData=c;}).catch(()=>{});
+  };
+  reader.readAsDataURL(f);
+}
+
+function clearSpotForm(){
+  ['spotVehNum','spotSupplier','spotChallan','spotDriverName','spotDriverMob','spotEntryRemarks'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';
+  });
+  ['spotChallanFile','spotDriverFile','spotVehFile'].forEach(id=>{
+    const el=document.getElementById(id);if(el){el.value='';el._compressedData=null;}
+  });
+  const resetThumb=(id,icon)=>{const t=document.getElementById(id);if(t){t.innerHTML=icon;t.style.border='2px dashed var(--border2)';}};
+  resetThumb('spotChallanThumb','📄');
+  resetThumb('spotDriverThumb','🧑');
+  resetThumb('spotVehThumb','🚗');
+}
+
+async function submitSpotEntry(){
+  const vehNum=document.getElementById('spotVehNum').value.trim().toUpperCase();
+  const driverMob=document.getElementById('spotDriverMob').value.trim();
+  if(!vehNum){notify('Vehicle number is required',true);return;}
+  if(driverMob&&driverMob.length!==10){notify('Driver mobile must be 10 digits',true);return;}
+  // Edit mode?
+  const editId=document.getElementById('spotEditId').value;
+  if(editId){
+    const s=(DB.spotTrips||[]).find(x=>x&&x.id===editId);
+    if(s){
+      const _sBak={...s};
+      s.vehicleNum=vehNum;
+      s.driverName=document.getElementById('spotDriverName').value.trim();
+      s.driverMobile=driverMob;
+      s.supplier=document.getElementById('spotSupplier').value.trim();
+      s.challan=document.getElementById('spotChallan').value.trim();
+      s.entryRemarks=document.getElementById('spotEntryRemarks').value.trim();
+      if(document.getElementById('spotVehFile')?._compressedData) s.entryVehiclePhoto=document.getElementById('spotVehFile')._compressedData;
+      if(document.getElementById('spotChallanFile')?._compressedData) s.challanPhoto=document.getElementById('spotChallanFile')._compressedData;
+      if(document.getElementById('spotDriverFile')?._compressedData) s.driverPhoto=document.getElementById('spotDriverFile')._compressedData;
+      if(!await _dbSave('spotTrips',s)){ Object.assign(s,_sBak); return; }
+      cancelSpotEdit();notify('Spot entry updated!');renderSpotTab();renderDash();updBadges();
+    }
+    return;
+  }
+  // New entry
+  const vehPhoto=document.getElementById('spotVehFile')?._compressedData||'';
+  if(!vehPhoto){notify('📷 Vehicle photo is mandatory for Spot Entry',true);return;}
+  const now=new Date();
+  const spotId='SP'+now.getFullYear().toString().slice(2)+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')+'-'+String((DB.spotTrips||[]).filter(s=>s.date===now.toISOString().split('T')[0]).length+1).padStart(3,'0');
+  if(!DB.spotTrips) DB.spotTrips=[];
+  const myLoc=CU.plant||'';
+  const _newSpot={
+    id:spotId,vehicleNum:vehNum,
+    supplier:document.getElementById('spotSupplier').value.trim(),
+    challan:document.getElementById('spotChallan').value.trim(),
+    challanPhoto:document.getElementById('spotChallanFile')?._compressedData||'',
+    driverName:document.getElementById('spotDriverName').value.trim(),
+    driverMobile:driverMob,
+    driverPhoto:document.getElementById('spotDriverFile')?._compressedData||'',
+    entryVehiclePhoto:vehPhoto,
+    entryRemarks:document.getElementById('spotEntryRemarks').value.trim(),
+    date:now.toISOString().split('T')[0],
+    entryTime:now.toISOString(),entryBy:CU.id,location:myLoc,
+    exitTime:null,exitBy:null,exitVehiclePhoto:'',exitRemarks:''
+  };
+  if(!await _dbSave('spotTrips',_newSpot)) return;
+  clearSpotForm();
+  notify(`Spot vehicle entry ${spotId} recorded!`);
+  renderSpotTab();renderDash();updBadges();
+}
+
+function cancelSpotEdit(){
+  document.getElementById('spotEditId').value='';
+  document.getElementById('spotSubmitBtn').textContent='🏁 Record Entry';
+  document.getElementById('spotSubmitBtn').className='btn btn-green';
+  document.getElementById('spotCancelEditBtn').style.display='none';
+  clearSpotForm();
+}
+
+function openSpotExitModal(spotId){
+  const s=(DB.spotTrips||[]).find(x=>x&&x.id===spotId);if(!s)return;
+  document.getElementById('spotExitId').value=spotId;
+  document.getElementById('spotExitRemarks').value='';
+  const el=document.getElementById('spotExitPhotoFile');if(el){el.value='';el._compressedData=null;}
+  const t=document.getElementById('spotExitPhotoThumb');if(t){t.innerHTML='🚗';t.style.border='2px dashed var(--border2)';}
+  const _entryBy=byId(DB.users,s.entryBy)?.fullName||byId(DB.users,s.entryBy)?.name||'—';
+  const _entryFmt=s.entryTime?new Date(s.entryTime).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:true}):'—';
+  document.getElementById('spotExitInfo').innerHTML=`
+    <div style="display:flex;gap:8px;align-items:flex-start">
+      ${s.entryVehiclePhoto?`<img src="${s.entryVehiclePhoto}" style="width:44px;height:44px;object-fit:cover;border-radius:6px;border:1px solid var(--border2);flex-shrink:0">`:''}
+      <div style="flex:1;min-width:0">
+        <div style="font-family:var(--mono);font-size:14px;font-weight:900;color:#dc2626">${s.vehicleNum}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:1px">${s.id}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;font-size:10px">
+          ${s.driverName?`<span style="background:var(--surface2);border:1px solid var(--border);padding:1px 5px;border-radius:3px">👤 ${s.driverName}${s.driverMobile?' · '+s.driverMobile:''}</span>`:''}
+          ${s.supplier?`<span style="background:var(--surface2);border:1px solid var(--border);padding:1px 5px;border-radius:3px">🏭 ${s.supplier}</span>`:''}
+          ${s.challan?`<span style="background:#f0fafa;border:1px solid #b3dfe0;padding:1px 5px;border-radius:3px;color:#1d6f73">📄 ${s.challan}</span>`:''}
+          ${s.entryRemarks?`<span style="background:var(--surface2);border:1px solid var(--border);padding:1px 5px;border-radius:3px;color:var(--text3)">💬 ${s.entryRemarks}</span>`:''}
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px">🏁 Entry: ${_entryFmt} by ${_entryBy}</div>
+      </div>
+    </div>`;
+  om('mSpotExit');
+}
+
+async function doSpotExitModal(){
+  const spotId=document.getElementById('spotExitId').value;
+  const exitPhoto=document.getElementById('spotExitPhotoFile')?._compressedData||'';
+  if(!exitPhoto){modalErr('mSpotExit','Capture vehicle exit photo');return;}
+  const s=(DB.spotTrips||[]).find(x=>x&&x.id===spotId);
+  if(!s){modalErr('mSpotExit','Spot trip not found');return;}
+  const _sBak={...s};
+  s.exitTime=new Date().toISOString();
+  s.exitBy=CU.id;
+  s.exitVehiclePhoto=exitPhoto;
+  s.exitRemarks=document.getElementById('spotExitRemarks').value.trim();
+  if(!await _dbSave('spotTrips',s)){ Object.assign(s,_sBak); return; }
+  cm('mSpotExit');
+  notify(`${spotId} — vehicle exit recorded!`);
+  renderSpotTab();renderDash();updBadges();
+}
+
+async function revokeSpotAction(spotId, action){
+  const s=(DB.spotTrips||[]).find(x=>x&&x.id===spotId);if(!s)return;
+  const now=new Date();
+  const hrs24=24*60*60*1000;
+  if(action==='entry'){
+    if(s.exitTime){notify('Cannot revoke entry — exit already recorded',true);return;}
+    const entryAge=now-new Date(s.entryTime);
+    if(entryAge>hrs24){notify('Cannot revoke — entry was recorded more than 24 hours ago',true);return;}
+    DB.spotTrips=DB.spotTrips.filter(x=>x.id!==spotId);
+    await _dbDel('spotTrips',spotId);
+    notify(`Entry ${spotId} revoked.`);
+  } else {
+    const exitAge=now-new Date(s.exitTime);
+    if(exitAge>hrs24){notify('Cannot revoke — exit was recorded more than 24 hours ago',true);return;}
+    s.exitTime=null;s.exitBy=null;s.exitVehiclePhoto='';s.exitRemarks='';
+    await _dbSave('spotTrips',s);
+    notify(`Exit for ${spotId} revoked — vehicle marked as inside.`);
+  }
+  renderSpotTab();
+}
+
+function renderSpotHistory(){
+  const list=document.getElementById('spotHistoryList');
+  if(!list)return;
+  const isSA=CU.roles.includes('Super Admin')||CU.roles.includes('Admin');
+  const isSuperAdmin=CU.roles.includes('Super Admin');
+  const myLocId=CU.plant||'';
+  const myLoc=byId(DB.locations,myLocId);
+
+  const spots=[...(DB.spotTrips||[])].sort((a,b)=>(b.entryTime||'').localeCompare(a.entryTime||''));
+  // Init spot history date range if not set (default: today)
+  const _shf=document.getElementById('spotHistFrom');const _sht=document.getElementById('spotHistTo');
+  if(_shf&&!_shf.value){const _n=new Date();const _td=_n.getFullYear()+'-'+String(_n.getMonth()+1).padStart(2,'0')+'-'+String(_n.getDate()).padStart(2,'0');_shf.value=_td;updDateBtnLbl('spotHistFrom');_sht.value=_td;updDateBtnLbl('spotHistTo');}
+  const _fromV=_shf?.value||'';const _toV=_sht?.value||'';
+  const d30=new Date();d30.setDate(d30.getDate()-30);
+  const filtered=spots.filter(s=>{
+    if(!isSuperAdmin&&new Date(s.date)<d30) return false;
+    if(!isSA&&s.location!==myLocId) return false;
+    const sDate=(s.entryTime||s.date||'').slice(0,10);
+    if(_fromV&&sDate<_fromV) return false;
+    if(_toV&&sDate>_toV) return false;
+    return true;
+  });
+
+  if(!filtered.length){
+    list.innerHTML='<div class="empty-state">No spot entries in the last 30 days'+(myLoc?` for ${myLoc.name}`:'')+'</div>';
+    return;
+  }
+  const now=new Date();
+  const hrs24=24*60*60*1000;
+  const fmt=t=>t?new Date(t).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:true}):'—';
+  list.innerHTML=filtered.map(s=>{
+    const vtName=vtname(s.vehicleTypeId);
+    const entryByName=(byId(DB.users,s.entryBy)?.fullName||byId(DB.users,s.entryBy)?.name||'—');
+    const exitByName=s.exitBy?(byId(DB.users,s.exitBy)?.fullName||byId(DB.users,s.exitBy)?.name||'—'):'';
+    const photos=[s.entryVehiclePhoto,s.driverPhoto,s.challanPhoto,s.exitVehiclePhoto].filter(Boolean);
+    const photoHtml=photos.map(p=>`<img src="${p}" onclick="openPhoto(this.src)" style="width:30px;height:30px;object-fit:cover;border-radius:4px;border:1px solid var(--border2);cursor:pointer">`).join(' ');
+    const isInside=!s.exitTime;
+    const canRevokeEntry=!s.exitTime&&(now-new Date(s.entryTime)<hrs24)&&(isSA||s.entryBy===CU.id);
+    const canRevokeExit=!!s.exitTime&&(now-new Date(s.exitTime)<hrs24)&&(isSA||s.exitBy===CU.id);
+    const canEdit=!s.exitTime&&(isSA||s.entryBy===CU.id);
+    const sid=s.id.replace(/[^a-zA-Z0-9]/g,'_');
+    const cardBg=isInside?'background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.18)':'background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2)';
+
+    return `<div class="seg-card" style="padding:6px 10px 6px 26px;position:relative;${cardBg};cursor:pointer" onclick="toggleSpotCard('${sid}')"><div style="position:absolute;left:0;top:0;bottom:0;width:26px;background:rgba(0,0,0,0.28);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff;user-select:none">${filtered.length-filtered.indexOf(s)}</div>
+      <!-- Compact row always visible -->
+      <div style="display:flex;align-items:center;gap:8px;min-width:0">
+        <span style="font-size:14px">${isInside?'🔴':'🟢'}</span>
+        <span style="font-family:var(--mono);font-size:30px;font-weight:900;line-height:1;color:${isInside?'#dc2626':'#16a34a'};flex-shrink:0">${s.vehicleNum}</span>
+        ${s.challan?`<span style="font-size:10px;background:#f0fafa;border:1px solid #b3dfe0;padding:1px 5px;border-radius:4px;color:#1d6f73;flex-shrink:0">📄 ${s.challan}</span>`:''}
+        <span style="font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1">${s.driverName||''} ${s.supplier?'· '+s.supplier:''}</span>
+        <span style="font-size:10px;color:var(--text3);white-space:nowrap;flex-shrink:0">${fmt(s.entryTime)}</span>
+      </div>
+      <!-- Expanded details (hidden by default) -->
+      <div id="spotExpand_${sid}" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)" onclick="event.stopPropagation()">
+        <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px">
+          ${s.entryVehiclePhoto?`<img src="${s.entryVehiclePhoto}" onclick="openPhoto(this.src)" style="width:52px;height:52px;object-fit:cover;border-radius:6px;border:2px solid var(--border2);cursor:pointer;flex-shrink:0">`:''}
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;flex-wrap:wrap;gap:4px;font-size:11px;color:var(--text2)">
+              ${s.driverName?`<span>👤 ${s.driverName}${s.driverMobile?' · 📱'+s.driverMobile:''}</span>`:''}
+              ${s.entryRemarks?`<span style="background:var(--surface2);border:1px solid var(--border);padding:1px 6px;border-radius:4px;color:var(--text3)">💬 ${s.entryRemarks}</span>`:''}
+            </div>
+            ${photos.filter(p=>p!==s.entryVehiclePhoto).length?`<div style="display:flex;gap:4px;margin-top:6px">${photos.filter(p=>p!==s.entryVehiclePhoto).map(p=>`<img src="${p}" onclick="openPhoto(this.src)" style="width:32px;height:32px;object-fit:cover;border-radius:4px;border:1px solid var(--border2);cursor:pointer">`).join('')}</div>`:''}
+          </div>
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:6px">
+          🏁 ${entryByName} · ${fmt(s.entryTime)}${s.exitTime?'<br>🚪 '+exitByName+' · '+fmt(s.exitTime):''}
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:4px;flex-wrap:wrap">
+          <div style="display:flex;gap:4px;flex-wrap:wrap">
+            ${canEdit?`<button style="background:#f0fafa;color:#1d6f73;border:1px solid #b3dfe0;border-radius:4px;font-size:10px;padding:2px 7px;cursor:pointer;font-weight:700" onclick="openSpotEdit('${s.id}')">✏ Edit</button>`:''}
+            ${canRevokeEntry?`<button class="kap-revoke-btn" style="font-size:10px" onclick="revokeSpotAction('${s.id}','entry')">↩ Revoke Entry</button>`:''}
+            ${canRevokeExit?`<button class="kap-revoke-btn" style="font-size:10px" onclick="revokeSpotAction('${s.id}','exit')">↩ Revoke Exit</button>`:''}
+            ${isSuperAdmin?`<button style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:4px;font-size:10px;padding:2px 6px;cursor:pointer;font-weight:700" onclick="event.stopPropagation();deleteSpotEntry('${s.id}')">🗑</button>`:''}
+          </div>
+          ${isInside?`<button class="btn btn-danger" style="font-size:13px;padding:10px 16px;font-weight:800;flex-shrink:0;letter-spacing:.3px" onclick="openSpotExitModal('${s.id}')">🚪 Exit Vehicle</button>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+
+function toggleSpotCard(sid){
+  const el=document.getElementById('spotExpand_'+sid);
+  if(!el)return;
+  const isOpen=el.style.display!=='none';
+  el.style.display=isOpen?'none':'block';
+}
+function openSpotEdit(id){
+  const s=(DB.spotTrips||[]).find(x=>x&&x.id===id);if(!s||s.exitTime)return;
+  // Fill the main spot form
+  setKapMode('spot');
+  document.getElementById('spotEditId').value=id;
+  document.getElementById('spotVehNum').value=s.vehicleNum||'';
+  document.getElementById('spotDriverName').value=s.driverName||'';
+  document.getElementById('spotDriverMob').value=s.driverMobile||'';
+  document.getElementById('spotSupplier').value=s.supplier||'';
+  document.getElementById('spotChallan').value=s.challan||'';
+  document.getElementById('spotEntryRemarks').value=s.entryRemarks||'';
+  // Switch button to edit mode
+  document.getElementById('spotSubmitBtn').textContent='✏ Edit Entry';
+  document.getElementById('spotSubmitBtn').className='btn btn-primary';
+  document.getElementById('spotCancelEditBtn').style.display='inline-flex';
+  // Scroll to form
+  document.getElementById('kapSpotSection').scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function saveSpotEdit(){
+  const id=document.getElementById('seEditId').value;
+  const s=(DB.spotTrips||[]).find(x=>x&&x.id===id);if(!s){modalErr('mSpotEdit','Entry not found');return;}
+  const vn=document.getElementById('seVehNum').value.trim().toUpperCase();
+  if(!vn){modalErr('mSpotEdit','Vehicle number is required');return;}
+  const mob=document.getElementById('seDriverMob').value.trim();
+  if(mob&&mob.length!==10){modalErr('mSpotEdit','Mobile must be 10 digits');return;}
+  const _sBak={...s};
+  s.vehicleNum=vn;
+  s.driverName=document.getElementById('seDriverName').value.trim();
+  s.driverMobile=mob;
+  s.supplier=document.getElementById('seSupplier').value.trim();
+  s.challan=document.getElementById('seChallan').value.trim();
+  s.entryRemarks=document.getElementById('seRemarks').value.trim();
+  if(!await _dbSave('spotTrips',s)){ Object.assign(s,_sBak); return; }
+  cm('mSpotEdit');renderSpotHistory();notify('Spot entry updated!');
+}
+function showConfirm(msg, onOk){
+  document.getElementById('confirmMsg').textContent=msg||'This action cannot be undone.';
+  document.getElementById('btnConfirmOk').onclick=()=>{cm('mConfirm');onOk();};
+  om('mConfirm');
+}
+
+async function deleteSpotEntry(id){
+  if(!CU||!CU.roles.includes('Super Admin')) return;
+  showConfirm('Delete spot entry '+id+'? This cannot be undone.',async ()=>{
+    if(!await _dbDel('spotTrips',id)) return;
+    renderSpotTab();renderDash();updBadges();notify('Spot entry deleted.');
+  });
+}
+
+function initHistDates(fromId, toId, grpId){
+  const now=new Date();
+  const pad=n=>String(n).padStart(2,'0');
+  // Default to this month
+  const from=`${now.getFullYear()}-${pad(now.getMonth()+1)}-01`;
+  const last=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  const to=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(last)}`;
+  const fe=document.getElementById(fromId);const te=document.getElementById(toId);
+  if(fe&&!fe.value){fe.value=from;updDateBtnLbl(fromId);}
+  if(te&&!te.value){te.value=to;updDateBtnLbl(toId);}
+  if(grpId)setTimeout(()=>updDrBtns(grpId,fromId,toId),50);
+}
+
+async function revokeKapStep(segId,stepNum){
+  const seg=byId(DB.segments,segId);if(!seg)return;
+  const st=seg.steps[stepNum];
+  if(!st?.done)return;
+  // Double-check: block revoke if material receipt already done
+  if(seg.steps[3]?.done){notify('Cannot revoke — Material Receipt already done',true);return;}
+  if(stepNum===1 && seg.steps[2]?.done){notify('Cannot revoke — Gate Entry already recorded',true);return;}
+  // Also re-lock next segment if step 1+2 were done and we're revoking step 2
+  let _nextSegToSave=null;
+  if(stepNum===2){
+    const nextLabel={A:'B',B:'C'}[seg.label];
+    if(nextLabel){
+      const next=DB.segments.find(s=>s.tripId===seg.tripId&&s.label===nextLabel);
+      if(next&&next.status==='Active'&&next.currentStep===1&&!next.steps[1]?.done){
+        next.status='Locked';
+        _nextSegToSave=next;
+      }
+    }
+  }
+  st.done=false;st.time=null;st.by=null;st.remarks='';st.photo=null;
+  seg.currentStep=nextStep(seg);
+  if(seg.status==='Completed')seg.status='Active';
+  await _dbSave('segments',seg);
+  if(_nextSegToSave) _dbSave('segments',_nextSegToSave).catch(e=>console.warn('revokeKapStep next seg save:',e));
+  renderKap();renderDash();updBadges();
+  notify(`Step ${stepNum===1?'Gate Exit':'Gate Entry'} revoked for ${segId}`);
+}
+
+function openInlineCam(sid){
+  const picker=document.getElementById('thumbPicker_'+sid);if(picker)picker.style.display='none';
+  _openCamStream({video:{facingMode:{ideal:'environment'}}}).then(stream=>{
+    if(!stream)return;
+    _inlineStreams[sid]=stream;
+    const v=document.getElementById('vid_'+sid);
+    if(v)v.srcObject=stream;
+    document.getElementById('camBox_'+sid).style.display='flex';
+  });
+}
+function stopInlineCam(sid){
+  const s=_inlineStreams[sid];
+  if(s)s.getTracks().forEach(t=>t.stop());
+  delete _inlineStreams[sid];
+  document.getElementById('camBox_'+sid).style.display='none';
+  document.getElementById('photoBtns_'+sid).style.display='flex';
+}
+function snapInline(sid){
+  const v=document.getElementById('vid_'+sid);
+  const c=document.getElementById('cnv_'+sid);
+  if(!v||!c)return;
+  c.width=v.videoWidth;c.height=v.videoHeight;
+  c.getContext('2d').drawImage(v,0,0);
+  _inlinePhotos[sid]=c.toDataURL('image/jpeg',0.82);
+  stopInlineCam(sid);
+  showInlinePreview(sid);
+  // Compress to <200KB in background
+  c.toBlob(blob=>{
+    if(!blob)return;
+    compressImage(new File([blob],'snap.jpg',{type:'image/jpeg'}))
+      .then(comp=>{_inlinePhotos[sid]=comp;})
+      .catch(()=>{});
+  },'image/jpeg',0.82);
+}
+function onInlineFile(input,sid){
+  const f=input.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    _inlinePhotos[sid]=e.target.result; // set immediately for preview
+    showInlinePreview(sid);
+    compressImage(f).then(c=>{_inlinePhotos[sid]=c;}).catch(()=>{});
+  };
+  r.readAsDataURL(f);
+}
+function showThumbPicker(sid){
+  // Close any other open pickers
+  document.querySelectorAll('[id^="thumbPicker_"]').forEach(el=>el.style.display='none');
+  // Find the file input inside the picker div
+  const picker=document.getElementById('thumbPicker_'+sid);
+  const fileInp=picker?.querySelector('input[type="file"]');
+  if(!fileInp) return;
+  if(_isMobileOrTablet()){
+    // Mobile/Tablet: open native device camera directly
+    fileInp.setAttribute('capture','environment');
+    fileInp.click();
+  } else {
+    // Desktop: open file picker
+    fileInp.removeAttribute('capture');
+    fileInp.click();
+  }
+}
+function showInlinePreview(sid){
+  const img=document.getElementById('thumbImg_'+sid);
+  if(img){img.src=_inlinePhotos[sid];img.style.display='block';}
+  const empty=document.getElementById('thumbEmpty_'+sid);
+  if(empty)empty.style.display='none';
+  const clear=document.getElementById('thumbClear_'+sid);
+  if(clear)clear.style.display='block';
+  const picker=document.getElementById('thumbPicker_'+sid);
+  if(picker)picker.style.display='none';
+  // hide cam box
+  document.getElementById('camBox_'+sid).style.display='none';
+}
+function clearInlinePhoto(sid){
+  delete _inlinePhotos[sid];
+  const img=document.getElementById('thumbImg_'+sid);if(img){img.src='';img.style.display='none';}
+  const empty=document.getElementById('thumbEmpty_'+sid);if(empty)empty.style.display='flex';
+  const clear=document.getElementById('thumbClear_'+sid);if(clear)clear.style.display='none';
+}
+async function doKapInline(segId,step){
+  const sid=segId.replace(/-/g,'_');
+  const seg=byId(DB.segments,segId);if(!seg)return;
+  const trip=byId(DB.trips,seg.tripId);
+
+  // Validate vehicle number for all steps
+  if(trip&&!trip.vehicleId){
+    const sLabel={1:'Gate Exit',2:'Gate Entry',5:'Empty Vehicle Exit'}[step]||'this action';
+    notify('Please assign a vehicle number before recording '+sLabel,true);
+    return;
+  }
+
+  // For gate exit: save inline challan if entered, then validate ALL segments have challan
+  if(step===1&&trip){
+    const idx=seg.label==='A'?1:seg.label==='B'?2:3;
+    // Check if inline challan input exists and save it
+    const inlineCh=document.getElementById('kapCh_'+sid);
+    if(inlineCh&&inlineCh.value.trim()){
+      trip['challan'+idx]=inlineCh.value.trim();
+      
+    }
+    // Validate: all segments of this trip must have challan
+    const allSegDests=[[trip.startLoc,trip.dest1,'A',1]];
+    if(trip.dest2)allSegDests.push([trip.dest1,trip.dest2,'B',2]);
+    if(trip.dest3)allSegDests.push([trip.dest2,trip.dest3,'C',3]);
+    const missingChallan=allSegDests.filter(([,,,i])=>!trip['challan'+i]);
+    if(missingChallan.length){
+      const labels=missingChallan.map(([,,,i])=>'ABCDEFGH'[i-1]).join(', ');
+      notify(`Challan number required for segment(s) ${labels} before Gate Exit`,true);
+      return;
+    }
+  }
+
+  // For gate entry: also validate challan exists for this segment
+  if(step===2&&trip){
+    const idx=seg.label==='A'?1:seg.label==='B'?2:3;
+    if(!trip['challan'+idx]){
+      notify(`Challan number required for segment ${seg.label} before Gate Entry`,true);
+      return;
+    }
+  }
+
+  const rem=(document.getElementById('rem_'+sid)?.value||'').trim();
+  // Photo is mandatory for Gate Exit (1), Gate Entry (2), Empty Vehicle Exit (5)
+  if(!_inlinePhotos[sid]){
+    const stepName={1:'Gate Exit',2:'Gate Entry',5:'Empty Vehicle Exit'}[step]||'this action';
+    notify(`📷 Vehicle photo is mandatory for ${stepName}. Please capture a photo.`,true);
+    return;
+  }
+  seg.steps[step].done=true;
+  seg.steps[step].time=new Date().toISOString();
+  seg.steps[step].by=CU.id;
+  seg.steps[step].remarks=rem;
+  if(_inlinePhotos[sid]){seg.steps[step].photo=_inlinePhotos[sid];delete _inlinePhotos[sid];}
+  if(_inlineStreams[sid]){_inlineStreams[sid].getTracks().forEach(t=>t.stop());delete _inlineStreams[sid];}
+  await advance(seg);if(!await _dbSave('segments',seg)) return;
+  // Remember which trip comes next so we can auto-expand it
+  const isSA=CU.roles.includes('Super Admin')||CU.roles.includes('Admin');
+  const _pendingSegsAfter=DB.segments.filter(s=>{
+    if(s.id===seg.id||s.status==='Completed'||s.status==='Locked'||s.status==='Rejected') return false;
+    if(s.currentStep!==step) return false;
+    return canDoStep(s,step);
+  });
+  const _nextSeg=_pendingSegsAfter[0];
+  const _nextPendId=_nextSeg?'kpend_'+_nextSeg.id.replace(/-/g,'_'):null;
+  renderKap();renderDash();renderMyTrips();updBadges();
+  // Auto-expand the next pending card after re-render
+  if(_nextPendId){
+    const _nextEl=document.getElementById(_nextPendId);
+    if(_nextEl&&_nextEl.style.display==='none'){
+      _nextEl.style.display='block';
+    }
+  }
+  notify(step===1?"Gate Exit recorded!":step===5?"Empty Vehicle Exit recorded!":"Gate Entry recorded!");
+}
+
+
+
+async function doKapAction(){
+  const segId=document.getElementById('kapSegId').value;
+  const step=parseInt(document.getElementById('kapStep').value);
+  const seg=byId(DB.segments,segId);
+  // For Gate Exit (step 1), require at least 1 challan entry for this segment
+  if(step===1){
+    const t=byId(DB.trips,seg.tripId);
+    if(t){
+      const segIdx={'A':1,'B':2,'C':3}[seg.label]||1;
+      const challans=t['challans'+segIdx]||[];
+      const hasAny=challans.some(ch=>ch.no&&ch.no.trim());
+      const legacyCh=(t['challan'+segIdx]||'').trim();
+      if(!hasAny&&!legacyCh){
+        notify('⚠ Please add at least 1 challan detail for this segment before Gate Exit.',true);
+        return;
+      }
+    }
+  }
+  const rem=document.getElementById('kapRem').value;
+  // Photo is mandatory for Gate Exit (1), Gate Entry (2), Empty Vehicle Exit (5)
+  if(!_kapPhotoData){
+    const stepName={1:'Gate Exit',2:'Gate Entry',5:'Empty Vehicle Exit'}[step]||'this action';
+    notify(`📷 Vehicle photo is mandatory for ${stepName}. Please capture a photo.`,true);
+    return;
+  }
+  const _segBak=JSON.parse(JSON.stringify(seg));
+  seg.steps[step].done=true;
+  seg.steps[step].time=new Date().toISOString();
+  seg.steps[step].by=CU.id;
+  seg.steps[step].remarks=rem;
+  if(_kapPhotoData) seg.steps[step].photo=_kapPhotoData;
+  await advance(seg);if(!await _dbSave('segments',seg)){ Object.assign(seg,_segBak); return; }
+  closeKapModal();
+  renderKap();renderDash();updBadges();
+  // Stay on prebooked page — scroll top of kap section into view
+  const _kapSec = document.getElementById('kapPreBookedSection');
+  if(_kapSec) _kapSec.scrollIntoView({behavior:'smooth', block:'start'});
+  notify(step===1?"Gate Exit recorded!":step===5?"Empty Vehicle Exit recorded!":"Gate Entry recorded!");
+}
+
+function clearTbPhoto(n){
+  const thumb=document.getElementById('tbP'+n+'Thumb');
+  if(thumb){thumb.innerHTML='📷';thumb.style.border='2px dashed var(--border2)';}
+  const input=document.getElementById('tbP'+n);
+  if(input){input.value='';input._compressedData=null;}
+  const clearBtn=document.getElementById('tbP'+n+'Clear');
+  if(clearBtn)clearBtn.style.display='none';
+}
+
+
+// ═══ CHECKPOINT / GUARD / ROUND SCHEDULE MASTERS ═══
+// ===== SECURITY CHECKPOINT MASTER =====
+function _kapLocations(){ return DB.locations.filter(l=>l.type==='KAP'&&!l.inactive); }
+function _cpForLoc(locId){ return (DB.checkpoints||[]).filter(cp=>cp.locationId===locId).sort((a,b)=>(a.sortOrder||1)-(b.sortOrder||1)); }
+function _populateCPLocFilter(){
+  const sel=document.getElementById('cpLocFilter');
+  if(!sel) return;
+  const cur=sel.value;
+  sel.innerHTML='<option value="">All KAP Locations</option>'+_kapLocations().sort((a,b)=>a.name.localeCompare(b.name)).map(l=>`<option value="${l.id}">${l.name}</option>`).join('');
+  sel.value=cur;
+}
+function renderCheckpoints(){
+  _populateCPLocFilter();
+  const locFilter=document.getElementById('cpLocFilter')?.value||'';
+  const locs=locFilter?_kapLocations().filter(l=>l.id===locFilter):_kapLocations();
+  const cont=document.getElementById('cpContent');
+  if(!cont)return;
+  if(!locs.length){ cont.innerHTML='<div class="empty-state">No KAP locations found. Add KAP locations in the Location Master first.</div>'; return; }
+  const allCPs=DB.checkpoints||[];
+  cont.innerHTML=locs.sort((a,b)=>a.name.localeCompare(b.name)).map(loc=>{
+    const cps=_cpForLoc(loc.id);
+    const maxCP=25;
+    const bg=loc.colour||'var(--surface2)';
+    return `<div class="card" style="padding:16px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="background:${bg};color:${colourContrast(bg)};padding:3px 10px;border-radius:6px;font-weight:800;font-size:13px">${loc.name}</span>
+          <span style="font-size:11px;color:var(--text3)">${cps.length} / ${maxCP} checkpoints</span>
+        </div>
+        ${cps.length<maxCP?`<button class="btn btn-primary" style="font-size:11px;padding:5px 12px" onclick="openCPModal(null,'${loc.id}')">+ Add</button>`:'<span style="font-size:11px;color:var(--red);font-weight:600">Max 25 reached</span>'}
+      </div>
+      ${cps.length?`<div style="display:flex;flex-direction:column;gap:4px">${cps.map((cp,i)=>{
+        const activeStyle=cp.active!==false?'':'opacity:.5;';
+        const activeBadge=cp.active!==false?'<span style="font-size:9px;font-weight:700;background:rgba(34,197,94,.15);color:#16a34a;padding:1px 6px;border-radius:4px">Active</span>':'<span style="font-size:9px;font-weight:700;background:#fee2e2;color:#dc2626;padding:1px 6px;border-radius:4px">Inactive</span>';
+        return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;${activeStyle}">
+          <span style="width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${cp.sortOrder||i+1}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700">${cp.name} ${activeBadge}</div>
+            ${cp.description?`<div style="font-size:11px;color:var(--text2);margin-top:1px">${cp.description}</div>`:''}
+          </div>
+          <button class="action-btn" onclick="openCPModal('${cp.id}')">✏️</button>
+          <button class="action-btn" onclick="del('checkpoints','${cp.id}',renderCheckpoints)">🗑️</button>
+        </div>`;
+      }).join('')}</div>`:'<div class="empty-state" style="padding:12px;font-size:12px">No checkpoints yet. Click + Add to create one.</div>'}
+    </div>`;
+  }).join('');
+  // Update sidebar count
+  const cEl=document.getElementById('cCheckpoints');
+  if(cEl) cEl.textContent=allCPs.filter(c=>c.active!==false).length;
+}
+function openCPModal(id,preLocId){
+  const cp=id?byId(DB.checkpoints||[],id):null;
+  document.getElementById('eCPid').value=id||'';
+  document.getElementById('mCPTitle').textContent=id?'Edit Checkpoint':'Add Checkpoint';
+  // Populate loc dropdown
+  const locS=document.getElementById('cpLocS');
+  locS.innerHTML='<option value="">-- Select Location --</option>'+_kapLocations().sort((a,b)=>a.name.localeCompare(b.name)).map(l=>`<option value="${l.id}">${l.name}</option>`).join('');
+  locS.value=cp?.locationId||preLocId||'';
+  document.getElementById('cpNameI').value=cp?.name||'';
+  document.getElementById('cpDescI').value=cp?.description||'';
+  document.getElementById('cpSortI').value=cp?.sortOrder||(_cpForLoc(locS.value).length+1);
+  document.getElementById('cpActiveI').checked=cp?cp.active!==false:true;
+  om('mCheckpoint');
+}
+async function saveCP(){
+  const id=document.getElementById('eCPid').value;
+  const locId=document.getElementById('cpLocS').value;
+  const name=document.getElementById('cpNameI').value.trim();
+  const desc=document.getElementById('cpDescI').value.trim();
+  const sort=parseInt(document.getElementById('cpSortI').value)||1;
+  const active=document.getElementById('cpActiveI').checked;
+  if(!locId||!name){modalErr('mCheckpoint','Location and Name are required');return;}
+  // Check max 25 per location (only for new)
+  if(!id&&_cpForLoc(locId).length>=25){modalErr('mCheckpoint','Maximum 25 checkpoints per location');return;}
+  // Check duplicate name within same location
+  if((DB.checkpoints||[]).find(c=>c.locationId===locId&&c.name.toLowerCase()===name.toLowerCase()&&c.id!==id)){modalErr('mCheckpoint','Checkpoint name already exists at this location');return;}
+  if(!DB.checkpoints) DB.checkpoints=[];
+  if(id){
+    const cp=byId(DB.checkpoints,id);const bak={...cp};
+    Object.assign(cp,{locationId:locId,name,description:desc,sortOrder:sort,active});
+    if(!await _dbSave('checkpoints',cp)){Object.assign(cp,bak);return;}
+  } else {
+    const cp={id:'cp'+uid(),locationId:locId,name,description:desc,sortOrder:sort,active};
+    if(!await _dbSave('checkpoints',cp)) return;
+  }
+  cm('mCheckpoint');renderCheckpoints();notify('Checkpoint saved!');
+}
+
+// ===== SECURITY GUARD MASTER =====
+function _populateGuardLocDropdown(selId,curVal){
+  const sel=document.getElementById(selId);
+  if(!sel)return;
+  sel.innerHTML='<option value="">-- Select Location --</option>'+_kapLocations().sort((a,b)=>a.name.localeCompare(b.name)).map(l=>`<option value="${l.id}">${l.name}</option>`).join('');
+  if(curVal) sel.value=curVal;
+}
+function renderGuards(){
+  const hideInactive=document.getElementById('showInactiveGuard')?.checked;
+  const guards=(DB.guards||[]).filter(g=>!hideInactive||!g.inactive).sort((a,b)=>a.name.localeCompare(b.name));
+  document.getElementById('guardBody').innerHTML=guards.map(g=>{
+    const inactive=g.inactive===true;
+    const loc=byId(DB.locations,g.locationId);
+    const locBg=loc?.colour||'var(--surface2)';
+    const photoHtml=g.photo?`<img src="${g.photo}" onclick="openPhoto(this.src)" style="width:32px;height:32px;object-fit:cover;border-radius:50%;border:2px solid var(--border2);cursor:pointer${inactive?';filter:grayscale(1);opacity:.6':''}">`:'<span style="width:32px;height:32px;border-radius:50%;background:var(--surface2);display:inline-flex;align-items:center;justify-content:center;font-size:14px;color:var(--text3)">💂</span>';
+    const inactiveBadge=inactive?'<span style="font-size:9px;font-weight:700;background:#fee2e2;color:#dc2626;padding:1px 6px;border-radius:4px;margin-left:4px;border:1px solid #fca5a5">Inactive</span>':'';
+    const trStyle=inactive?'style="opacity:.6;background:rgba(239,68,68,.03)"':'';
+    return `<tr ${trStyle}>
+      <td onclick="event.stopPropagation()">${photoHtml}</td>
+      <td style="font-weight:600">${g.name}${inactiveBadge}</td>
+      <td>${g.mobile||'-'}</td>
+      <td>${loc?`<span style="background:${locBg};color:${colourContrast(locBg)};padding:1px 6px;border-radius:4px;font-weight:600;font-size:11px">${loc.name}</span>`:'-'}</td>
+      <td>${g.shift||'-'}</td>
+      <td style="white-space:nowrap" onclick="event.stopPropagation()"><button class="action-btn" onclick="openGuardModal('${g.id}')">✏️</button><button class="action-btn" onclick="del('guards','${g.id}',renderGuards)">🗑️</button></td>
+    </tr>`;
+  }).join('');
+  const cEl=document.getElementById('cGuards');
+  if(cEl) cEl.textContent=(DB.guards||[]).filter(g=>!g.inactive).length;
+}
+function _guardOnPhoto(inp){
+  if(!inp.files[0])return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const thumb=document.getElementById('guardPhotoThumb');
+    const clear=document.getElementById('guardPhotoClear');
+    thumb.innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:6px">`;
+    thumb.style.border='2px solid var(--green)';
+    if(clear)clear.style.display='inline';
+    inp._data=e.target.result;
+  };
+  reader.readAsDataURL(inp.files[0]);
+}
+function _guardClearPhoto(){
+  const thumb=document.getElementById('guardPhotoThumb');
+  const clear=document.getElementById('guardPhotoClear');
+  const inp=document.getElementById('guardPhotoFile');
+  thumb.innerHTML='🧑';thumb.style.border='2px dashed var(--border2)';
+  if(clear)clear.style.display='none';
+  if(inp){inp.value='';inp._data='__clear__';}
+}
+function openGuardModal(id){
+  const g=id?byId(DB.guards||[],id):null;
+  document.getElementById('eGuardId').value=id||'';
+  document.getElementById('mGuardTitle').textContent=id?'Edit Guard':'Add Guard';
+  document.getElementById('guardNameI').value=g?.name||'';
+  document.getElementById('guardMobI').value=g?.mobile||'';
+  document.getElementById('guardEmailI').value=g?.email||'';
+  document.getElementById('guardShiftS').value=g?.shift||'';
+  _populateGuardLocDropdown('guardLocS',g?.locationId||'');
+  document.getElementById('guardInactive').checked=g?.inactive===true;
+  // Photo
+  const thumb=document.getElementById('guardPhotoThumb');
+  const clear=document.getElementById('guardPhotoClear');
+  const inp=document.getElementById('guardPhotoFile');
+  if(inp){inp.value='';inp._data=null;}
+  if(g?.photo){
+    thumb.innerHTML=`<img src="${g.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:6px">`;thumb.style.border='2px solid var(--green)';
+    if(clear)clear.style.display='inline';
+  } else {
+    thumb.innerHTML='🧑';thumb.style.border='2px dashed var(--border2)';
+    if(clear)clear.style.display='none';
+  }
+  om('mGuard');
+}
+async function saveGuard(){
+  const id=document.getElementById('eGuardId').value;
+  const name=document.getElementById('guardNameI').value.trim();
+  const mobile=document.getElementById('guardMobI').value.trim();
+  const email=document.getElementById('guardEmailI').value.trim();
+  const locId=document.getElementById('guardLocS').value;
+  const shift=document.getElementById('guardShiftS').value;
+  const inactive=document.getElementById('guardInactive').checked;
+  if(!name||!mobile||!locId){modalErr('mGuard','Name, Mobile & Location are required');return;}
+  if(mobile.length!==10||!/^\d+$/.test(mobile)){modalErr('mGuard','Mobile must be 10 digits');return;}
+  // Photo
+  const inp=document.getElementById('guardPhotoFile');
+  let photo=id?byId(DB.guards||[],id)?.photo||'':'';
+  if(inp?._data==='__clear__') photo='';
+  else if(inp?._data) photo=inp._data;
+  if(!DB.guards) DB.guards=[];
+  if(id){
+    const g=byId(DB.guards,id);const bak={...g};
+    Object.assign(g,{name,mobile,email,locationId:locId,shift,photo,inactive});
+    if(!await _dbSave('guards',g)){Object.assign(g,bak);return;}
+  } else {
+    const g={id:'gd'+uid(),name,mobile,email,locationId:locId,shift,photo,inactive};
+    if(!await _dbSave('guards',g)) return;
+  }
+  cm('mGuard');renderGuards();notify('Guard saved!');
+}
+
+// ===== SECURITY ROUND SCHEDULE MASTER =====
+function _populateRSLocFilter(){
+  const sel=document.getElementById('rsLocFilter');
+  if(!sel) return;
+  const cur=sel.value;
+  sel.innerHTML='<option value="">All Locations</option>'+_kapLocations().sort((a,b)=>a.name.localeCompare(b.name)).map(l=>`<option value="${l.id}">${l.name}</option>`).join('');
+  sel.value=cur;
+}
+function renderRoundSchedules(){
+  _populateRSLocFilter();
+  const locFilter=document.getElementById('rsLocFilter')?.value||'';
+  const hideInactive=document.getElementById('showInactiveRS')?.checked;
+  const schedules=(DB.roundSchedules||[]).filter(rs=>{
+    if(hideInactive&&rs.inactive) return false;
+    if(locFilter&&rs.locationId!==locFilter) return false;
+    return true;
+  }).sort((a,b)=>a.name.localeCompare(b.name));
+  document.getElementById('rsBody').innerHTML=schedules.length?schedules.map(rs=>{
+    const loc=byId(DB.locations,rs.locationId);
+    const guard=byId(DB.guards||[],rs.guardId);
+    const cps=(rs.checkpointIds||[]).map(cpId=>byId(DB.checkpoints||[],cpId)).filter(Boolean);
+    const inactive=rs.inactive===true;
+    const inactiveBadge=inactive?'<span style="font-size:9px;font-weight:700;background:#fee2e2;color:#dc2626;padding:1px 6px;border-radius:4px;margin-left:4px;border:1px solid #fca5a5">Inactive</span>':'';
+    const locBg=loc?.colour||'var(--surface2)';
+    return `<tr ${inactive?'style="opacity:.6;background:rgba(239,68,68,.03)"':''}>
+      <td style="font-weight:600">${rs.name}${inactiveBadge}</td>
+      <td>${loc?`<span style="background:${locBg};color:${colourContrast(locBg)};padding:1px 6px;border-radius:4px;font-weight:600;font-size:11px">${loc.name}</span>`:'-'}</td>
+      <td>${guard?guard.name:'-'}</td>
+      <td>${cps.length?cps.map(cp=>`<span style="display:inline-block;background:rgba(42,154,160,.1);color:var(--accent);font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px;margin:1px 2px">${cp.name}</span>`).join(''):'<span style="color:var(--text3);font-size:11px">None</span>'}</td>
+      <td><span class="badge badge-amber">${rs.frequency}</span></td>
+      <td style="white-space:nowrap;font-family:var(--mono);font-size:12px">${rs.startTime||'—'} – ${rs.endTime||'—'}</td>
+      <td style="white-space:nowrap"><button class="action-btn" onclick="openRSModal('${rs.id}')">✏️</button><button class="action-btn" onclick="del('roundSchedules','${rs.id}',renderRoundSchedules)">🗑️</button></td>
+    </tr>`;
+  }).join(''):'<tr><td colspan="7" class="empty-state">No round schedules yet.</td></tr>';
+  const cEl=document.getElementById('cRoundSched');
+  if(cEl) cEl.textContent=(DB.roundSchedules||[]).filter(rs=>!rs.inactive).length;
+}
+function onRSLocChange(){
+  const locId=document.getElementById('rsLocS').value;
+  // Populate guard dropdown filtered by location
+  const gSel=document.getElementById('rsGuardS');
+  const guards=(DB.guards||[]).filter(g=>g.locationId===locId&&!g.inactive);
+  gSel.innerHTML='<option value="">-- Unassigned --</option>'+guards.sort((a,b)=>a.name.localeCompare(b.name)).map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+  // Populate checkpoint list
+  const cpList=document.getElementById('rsCPList');
+  const cps=_cpForLoc(locId).filter(cp=>cp.active!==false);
+  if(!cps.length){
+    cpList.innerHTML='<div style="color:var(--text3);font-size:12px;text-align:center;padding:8px">'+(locId?'No active checkpoints at this location':'Select a location first')+'</div>';
+    return;
+  }
+  cpList.innerHTML=cps.map(cp=>`<label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;transition:background .15s;border:1px solid transparent" onmouseenter="this.style.background='rgba(42,154,160,.06)'" onmouseleave="this.style.background=''">
+    <input type="checkbox" class="rsCPCheck" value="${cp.id}" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0" onchange="this.closest('label').style.borderColor=this.checked?'var(--accent)':'transparent'">
+    <span style="width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${cp.sortOrder||''}</span>
+    <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">${cp.name}</div>${cp.description?`<div style="font-size:10px;color:var(--text3)">${cp.description}</div>`:''}</div>
+  </label>`).join('');
+}
+function openRSModal(id){
+  const rs=id?byId(DB.roundSchedules||[],id):null;
+  document.getElementById('eRSid').value=id||'';
+  document.getElementById('mRSTitle').textContent=id?'Edit Round Schedule':'Add Round Schedule';
+  document.getElementById('rsNameI').value=rs?.name||'';
+  // Populate loc dropdown
+  const locS=document.getElementById('rsLocS');
+  locS.innerHTML='<option value="">-- Select Location --</option>'+_kapLocations().sort((a,b)=>a.name.localeCompare(b.name)).map(l=>`<option value="${l.id}">${l.name}</option>`).join('');
+  locS.value=rs?.locationId||'';
+  document.getElementById('rsFreqS').value=rs?.frequency||'Daily';
+  document.getElementById('rsStartI').value=rs?.startTime||'06:00';
+  document.getElementById('rsEndI').value=rs?.endTime||'18:00';
+  document.getElementById('rsInactive').checked=rs?.inactive===true;
+  // Trigger loc change to populate guards & checkpoints
+  onRSLocChange();
+  // Restore guard selection
+  if(rs?.guardId) document.getElementById('rsGuardS').value=rs.guardId;
+  // Restore checkpoint selections
+  if(rs?.checkpointIds?.length){
+    setTimeout(()=>{
+      document.querySelectorAll('.rsCPCheck').forEach(cb=>{
+        if(rs.checkpointIds.includes(cb.value)){
+          cb.checked=true;
+          cb.closest('label').style.borderColor='var(--accent)';
+        }
+      });
+    },50);
+  }
+  om('mRoundSchedule');
+}
+async function saveRS(){
+  const id=document.getElementById('eRSid').value;
+  const name=document.getElementById('rsNameI').value.trim();
+  const locId=document.getElementById('rsLocS').value;
+  const guardId=document.getElementById('rsGuardS').value;
+  const freq=document.getElementById('rsFreqS').value;
+  const startTime=document.getElementById('rsStartI').value;
+  const endTime=document.getElementById('rsEndI').value;
+  const inactive=document.getElementById('rsInactive').checked;
+  const cpIds=[...document.querySelectorAll('.rsCPCheck:checked')].map(cb=>cb.value);
+  if(!name||!locId){modalErr('mRoundSchedule','Name and Location are required');return;}
+  if(!startTime||!endTime){modalErr('mRoundSchedule','Start and End time are required');return;}
+  if(!cpIds.length){modalErr('mRoundSchedule','Select at least one checkpoint');return;}
+  if(!DB.roundSchedules) DB.roundSchedules=[];
+  if(id){
+    const rs=byId(DB.roundSchedules,id);const bak={...rs};
+    Object.assign(rs,{name,locationId:locId,guardId,checkpointIds:cpIds,frequency:freq,startTime,endTime,inactive});
+    if(!await _dbSave('roundSchedules',rs)){Object.assign(rs,bak);return;}
+  } else {
+    const rs={id:'rs'+uid(),name,locationId:locId,guardId,checkpointIds:cpIds,frequency:freq,startTime,endTime,inactive};
+    if(!await _dbSave('roundSchedules',rs)) return;
+  }
+  cm('mRoundSchedule');renderRoundSchedules();notify('Schedule saved!');
+}
+
+// ═══ SECURITY BOOT ═══
+async function _secBoot(){
+  if(!_sbReady) _initSupabase();
+  if(!_sbReady) _sbTryFallbackCDN();
+  if(!_sbReady){
+    var _s=document.getElementById('sbCDN');
+    if(_s) _s.addEventListener('load', function(){
+      _initSupabase();
+      if(_sbReady){ bootDB().then(function(){ _sbSetStatus('ok'); _sbStartRealtime(); }).catch(function(){}); }
+    });
+  }
+  var _splash=document.getElementById('dbSplash');
+  if(_splash) _splash.style.display='flex';
+  document.body.style.display='';
+  try{ await bootDB(); }catch(e){
+    console.error('bootDB error',e);
+    if(_splash) _splash.style.display='none';
+    return;
+  }
+  if(_splash) _splash.style.display='none';
+  try{ _applyPhotoInputMode(); }catch(e){}
+  var su=_sessionGet('kap_session_user'), sp=_sessionGet('kap_session_pass');
+  if(su&&sp){
+    var user=(DB.users||[]).find(function(u){return u&&u.name.toLowerCase()===su&&u.password===sp;});
+    if(user&&!user.inactive){
+      CU=user;
+      _enrichCU();
+      var initials=(CU.fullName||CU.name||'').trim().split(/\s+/).map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase()||'👤';
+      var av=document.getElementById('secAvatar');
+      if(av){ if(CU.photo){av.innerHTML='<img src="'+CU.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:8px">';}else{av.textContent=initials;} }
+      var fn=document.getElementById('secUserFullName'); if(fn) fn.textContent=CU.fullName||CU.name||'—';
+      var rl=document.getElementById('secUserRole'); if(rl) rl.textContent=(CU.roles&&CU.roles.includes('Super Admin'))?'Super Admin':'KAP Security';
+      var un=document.getElementById('secUserName'); if(un) un.textContent=CU.fullName||CU.name;
+      document.getElementById('secTopbar').style.display='flex';
+      document.getElementById('secApp').style.display='block';
+      secGo('pageKapSecurity');
+      return;
+    }
+  }
+  _navigateTo('myApps_Portal_v18.html');
+}
+var _secBootDone=false;
+setTimeout(function(){if(!_secBootDone){var sp=document.getElementById('dbSplash');if(sp)sp.style.display='none';_navigateTo('myApps_Portal_v18.html');}},12000);
+window.addEventListener('load', function(){
+  _secBoot().then(function(){_secBootDone=true;}).catch(function(e){
+    console.error('Security boot failed:',e);
+    _navigateTo('myApps_Portal_v18.html');
+  });
+});
+</script>
+</body></html>
