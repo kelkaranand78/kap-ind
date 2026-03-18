@@ -124,7 +124,7 @@ tr.clickable-row{cursor:pointer;transition:background .15s}tr.clickable-row:hove
     </div>
   </div>
   <!-- My Apps -->
-  <div class="nav-item" onclick="_navigateTo('myApps_Portal_v18.html')" style="background:rgba(42,154,160,.06);border:1px solid rgba(42,154,160,.15);margin:8px 10px;border-radius:8px;font-weight:700;color:var(--accent)">&#x1F3E0; My Apps</div>
+  <div class="nav-item" onclick="_navigateTo('index.html')" style="background:rgba(42,154,160,.06);border:1px solid rgba(42,154,160,.15);margin:8px 10px;border-radius:8px;font-weight:700;color:var(--accent)">&#x1F3E0; My Apps</div>
   <div class="nav-sec">OPERATIONS</div>
   <div class="nav-item" onclick="hwmsGo('pageHwmsContainers')">&#x1F6A2; Containers <span class="hwms-cnt" id="hcContainers"></span></div>
   <div class="nav-item" onclick="hwmsGo('pageHwmsInvoices')">&#x1F9FE; Invoices <span class="hwms-cnt" id="hcInvoices"></span></div>
@@ -762,7 +762,7 @@ function _hwmsIsAdmin(){return _hwmsIsSA()||(CU&&(CU.hwmsRoles||[]).includes('HW
 function hwmsLogout(){
   CU=null; _sessionDel('kap_session_user'); _sessionDel('kap_session_pass');
   try{localStorage.removeItem('kap_rm_user');localStorage.removeItem('kap_rm_pass');}catch(e){}
-  _navigateTo('myApps_Portal_v18.html');
+  _navigateTo('index.html');
 }
 
 function _hwmsUpdCounts(){
@@ -818,11 +818,11 @@ async function _hwmsBoot(){
       return;
     }
   }
-  _navigateTo('myApps_Portal_v18.html');
+  _navigateTo('index.html');
 }
 // Safety: redirect to portal if boot hangs
 let _hwmsBootDone=false;
-setTimeout(()=>{if(!_hwmsBootDone){console.warn('HWMS: safety timeout');const sp=document.getElementById('dbSplash');if(sp)sp.style.display='none';_navigateTo('myApps_Portal_v18.html');}},12000);
+setTimeout(()=>{if(!_hwmsBootDone){console.warn('HWMS: safety timeout');const sp=document.getElementById('dbSplash');if(sp)sp.style.display='none';_navigateTo('index.html');}},12000);
 
 // Global Enter key handler for HWMS form submission
 document.addEventListener('keydown', function(e){
@@ -839,7 +839,7 @@ document.addEventListener('keydown', function(e){
 document.addEventListener('DOMContentLoaded', ()=>{
   _hwmsBoot().then(()=>{_hwmsBootDone=true;}).catch(e=>{
     console.error('HWMS boot failed:',e);
-    _navigateTo('myApps_Portal_v18.html');
+    _navigateTo('index.html');
   });
 });
 

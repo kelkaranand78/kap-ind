@@ -635,7 +635,7 @@
       </div>
     </div>
   </div>
-  <div class="sec-nav-item" onclick="_navigateTo('myApps_Portal_v18.html')" style="background:rgba(42,154,160,.06);border:1px solid rgba(42,154,160,.15);margin:8px 10px;border-radius:8px;font-weight:700;color:var(--accent)">🏠 My Apps</div>
+  <div class="sec-nav-item" onclick="_navigateTo('index.html')" style="background:rgba(42,154,160,.06);border:1px solid rgba(42,154,160,.15);margin:8px 10px;border-radius:8px;font-weight:700;color:var(--accent)">🏠 My Apps</div>
   <div class="sec-nav-sec">MASTERS</div>
   <div class="sec-nav-item" id="nCheckpoints" onclick="secGo('pageCheckpoints')">📍 Checkpoints</div>
   <div class="sec-nav-item" id="nGuards" onclick="secGo('pageGuards')">👮 Guards</div>
@@ -845,7 +845,7 @@ function closeSecNav(){ document.getElementById('secSidebar').classList.remove('
 function secLogout(){
   CU=null; _sessionDel('kap_session_user'); _sessionDel('kap_session_pass');
   try{localStorage.removeItem('kap_rm_user');localStorage.removeItem('kap_rm_pass');}catch(e){}
-  _navigateTo('myApps_Portal_v18.html');
+  _navigateTo('index.html');
 }
 
 // ═══ STUBS ═══
@@ -1191,11 +1191,11 @@ async function _secBoot(){
       return;
     }
   }
-  _navigateTo('myApps_Portal_v18.html');
+  _navigateTo('index.html');
 }
 
 var _secBootDone=false;
-setTimeout(function(){if(!_secBootDone){var sp=document.getElementById('dbSplash');if(sp)sp.style.display='none';_navigateTo('myApps_Portal_v18.html');}},12000);
+setTimeout(function(){if(!_secBootDone){var sp=document.getElementById('dbSplash');if(sp)sp.style.display='none';_navigateTo('index.html');}},12000);
 // Global Enter key handler for Security form submission
 document.addEventListener('keydown', function(e){
   if(e.key!=='Enter') return;
@@ -1210,7 +1210,7 @@ document.addEventListener('keydown', function(e){
 document.addEventListener('DOMContentLoaded', function(){
   _secBoot().then(function(){_secBootDone=true;}).catch(function(e){
     console.error('Security boot failed:',e);
-    _navigateTo('myApps_Portal_v18.html');
+    _navigateTo('index.html');
   });
 });
 </script>
