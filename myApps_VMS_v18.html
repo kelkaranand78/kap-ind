@@ -596,7 +596,7 @@
   }
 @keyframes spin{to{transform:rotate(360deg)}}
   @keyframes sbPulse{0%,100%{opacity:1}50%{opacity:.4}}
-</style>
+@keyframes kapLocFlash{from{outline:3px solid rgba(255,255,255,0.4);outline-offset:1px}to{outline:3px solid #fff;outline-offset:3px}}</style>
 
 </head>
 <body>
@@ -3148,7 +3148,7 @@ function renderDashTrips(){
     const anyAction=segs.some(s=>[1,2,3,4,5].some(n=>s.steps[n]?.done));
     const cardBg=isCompleted?'background:rgba(22,163,74,.08);border:1.5px solid rgba(22,163,74,.3)':'background:#ffffff;border:1.5px solid var(--border)';
     const locs=[t.startLoc,t.dest1,t.dest2,t.dest3].filter(Boolean);
-    const routeParts=locs.map((id,i)=>{const l=byId(DB.locations,id);const clr=l?.colour||'var(--accent)';return`<span style="background:${clr};color:${colourContrast(clr)};padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700">${l?.name||'?'}</span>`+(i<locs.length-1?'<span style="color:var(--accent);font-weight:900;font-size:11px;margin:0 2px">⟶</span>':'');}).join('');
+    const routeParts=locs.map((id,i)=>{const l=byId(DB.locations,id);const clr=l?.colour||'var(--accent)';return`<span style="background:${clr};color:${colourContrast(clr)};padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700">${l?.name||'?'}</span>`+(i<locs.length-1?'<span style="color:var(--accent);font-weight:900;font-size:14px;margin:0 3px">⟶</span>':'');}).join('');
     const rate=getMatchedRate(t.id);
 
     const segBlocks=segs.map(s=>{
@@ -5029,8 +5029,8 @@ function renderMyTrips(){
     const locCol=(id)=>{const l=byId(DB.locations,id);return l?.colour||'var(--accent)';};
     const routeParts=_locs.map((id,i)=>{
       const l=byId(DB.locations,id);const c=l?.colour||'var(--accent)';
-      return `<span style="background:${c};color:${colourContrast(c)};padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap">${l?.name||'?'}</span>`
-        +(i<_locs.length-1?'<span style="color:var(--accent);font-weight:900;font-size:11px;margin:0 2px">⟶</span>':'');
+      return `<span style="background:${c};color:${colourContrast(c)};padding:2px 9px;border-radius:4px;font-size:13px;font-weight:700;white-space:nowrap">${l?.name||'?'}</span>`
+        +(i<_locs.length-1?'<span style="color:var(--accent);font-weight:900;font-size:14px;margin:0 3px">⟶</span>':'');
     }).join('');
 
     const vehLabel=hasVeh
@@ -5240,6 +5240,16 @@ function _kapUpdateCounts(){
 
 
 // ===== KAP SECURITY =====
+function _kapOpenPopup(popId){
+  _kapPopupOpen=true;
+  const el=document.getElementById(popId);
+  if(el) el.style.display='flex';
+}
+function _kapClosePopup(popId){
+  _kapPopupOpen=false;
+  const el=document.getElementById(popId);
+  if(el) el.style.display='none';
+}
 function _kapGetOpenPopup(){
   // Return the id of any currently-open KAP popup
   const open=document.querySelector('[id^="kap_pop_"][style*="flex"]');
@@ -5248,7 +5258,7 @@ function _kapGetOpenPopup(){
 function _kapRestorePopup(popId){
   if(!popId) return;
   const el=document.getElementById(popId);
-  if(el) el.style.display='flex';
+  if(el){el.style.display='flex';_kapPopupOpen=true;}
 }
 function renderKap(){
   const _openPop=_kapGetOpenPopup(); // save before re-render destroys DOM
@@ -5318,7 +5328,7 @@ function renderKap(){
 
       // Vehicle badge: always read-only on KAP page
       let vehBadge=hasVeh
-        ?`<span style="font-family:var(--mono);font-size:clamp(14px,4vw,28px);font-weight:900;color:var(--text);background:#fef08a;border:2px solid #ca8a04;border-radius:8px;padding:2px 10px;flex-shrink:0;white-space:nowrap">${vehNum}</span>`
+        ?`<span style="font-family:var(--mono);font-size:clamp(18px,5vw,35px);font-weight:900;color:var(--text);background:#fef08a;border:2px solid #ca8a04;border-radius:8px;padding:2px 10px;flex-shrink:0;white-space:nowrap">${vehNum}</span>`
         :`<span class="flash-red" style="font-family:var(--mono);font-size:24px;font-weight:900;border-radius:8px;padding:2px 10px;flex-shrink:0">No Vehicle</span>`;
 
       // Build all segment rows
@@ -5392,14 +5402,24 @@ function renderKap(){
       const pendId='kpend_'+sid;
       const vn=vnum(trip?.vehicleId);
       // Coloured location pills for route
+      // Action location: where the guard needs to act
+      const _actionLoc=_isStep5?seg.sLoc:cs===2?seg.dLoc:seg.sLoc;
       const routePills=allSegDests.map(([from,to,lbl,idx],i)=>{
         const lf=byId(DB.locations,from),lt=byId(DB.locations,to);
         const cf=lf?.colour||'var(--accent)',ct=lt?.colour||'var(--accent)';
+        const _flashFrom=from===_actionLoc;
+        const _flashTo=to===_actionLoc&&!_flashFrom;
+        const _fromStyle=_flashFrom
+          ?`background:${cf};color:${colourContrast(cf)};padding:2px 9px;border-radius:4px;font-size:13px;font-weight:700;white-space:nowrap;outline:2px solid #fff;animation:kapLocFlash 0.8s ease-in-out infinite alternate;box-shadow:0 0 0 2px ${cf}`
+          :`background:${cf};color:${colourContrast(cf)};padding:2px 9px;border-radius:4px;font-size:13px;font-weight:700;white-space:nowrap`;
+        const _toStyle=_flashTo
+          ?`background:${ct};color:${colourContrast(ct)};padding:2px 9px;border-radius:4px;font-size:13px;font-weight:700;white-space:nowrap;outline:2px solid #fff;animation:kapLocFlash 0.8s ease-in-out infinite alternate;box-shadow:0 0 0 2px ${ct}`
+          :`background:${ct};color:${colourContrast(ct)};padding:2px 9px;border-radius:4px;font-size:13px;font-weight:700;white-space:nowrap`;
         return (i===0
-          ?`<span style="background:${cf};color:${colourContrast(cf)};padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap">${lf?.name||'?'}</span>`
+          ?`<span style="${_fromStyle}">${lf?.name||'?'}</span>`
           :'')
-          +`<span style="color:var(--accent);font-weight:900;font-size:11px;margin:0 2px">⟶</span>`
-          +`<span style="background:${ct};color:${colourContrast(ct)};padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap">${lt?.name||'?'}</span>`;
+          +`<span style="color:var(--accent);font-weight:900;font-size:14px;margin:0 3px">⟶</span>`
+          +`<span style="${_toStyle}">${lt?.name||'?'}</span>`;
       }).join('');
 
       const cardBorderClr=cs===1?'#dc2626':_isStep5?'#ea580c':'#16a34a';
@@ -5435,10 +5455,10 @@ function renderKap(){
       const popId='kap_pop_'+seg.id.replace(/[^a-z0-9]/gi,'_');
       return `<div style="margin-bottom:8px">
         <!-- COMPACT CARD — click opens popup -->
-        <div class="seg-card" style="padding:0;overflow:hidden;cursor:pointer;border:2px solid ${cardBorderClr};border-radius:10px;transition:box-shadow .15s" onclick="document.getElementById('${popId}').style.display='flex'" onmouseover="this.style.boxShadow='0 4px 18px rgba(0,0,0,.15)'" onmouseout="this.style.boxShadow=''">
+        <div class="seg-card" style="padding:0;overflow:hidden;cursor:pointer;border:2px solid ${cardBorderClr};border-radius:10px;transition:box-shadow .15s" onclick="_kapOpenPopup('${popId}')" onmouseover="this.style.boxShadow='0 4px 18px rgba(0,0,0,.15)'" onmouseout="this.style.boxShadow=''">
           <!-- Main row: Trip ID + Vehicle + action badge -->
           <div style="display:flex;align-items:center;gap:8px;padding:8px 12px 4px;flex-wrap:nowrap;min-width:0">
-            <span style="font-family:var(--mono);font-size:17px;font-weight:900;color:#fff;background:var(--accent);padding:2px 10px;border-radius:8px;flex-shrink:0;white-space:nowrap">${seg.tripId}</span>
+            <span style="font-family:var(--mono);font-size:21px;font-weight:900;color:#fff;background:var(--accent);padding:2px 10px;border-radius:8px;flex-shrink:0;white-space:nowrap">${seg.tripId}</span>
             ${vehBadge}
             <div style="flex:1;min-width:0"></div>
             <span style="font-size:18px;color:var(--text3);font-weight:300;flex-shrink:0">›</span>
@@ -5453,36 +5473,41 @@ function renderKap(){
         <div id="${popId}" style="display:none;position:fixed;inset:0;z-index:100000;background:rgba(30,40,70,.55);align-items:center;justify-content:center;padding:12px" onclick="if(event.target===this)this.style.display='none'">
           <div style="background:var(--surface);border-radius:16px;max-width:540px;width:100%;max-height:calc(100vh - 24px);overflow-y:auto;box-shadow:0 8px 48px rgba(0,0,0,.35)">
             <!-- Popup header -->
-            <div style="display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:1;border-radius:16px 16px 0 0">
-              <span style="font-family:var(--mono);font-size:20px;font-weight:900;color:#fff;background:var(--accent);padding:2px 12px;border-radius:8px">${seg.tripId}</span>
-              ${vehBadge}
-              <div style="flex:1"></div>
-              <button onclick="document.getElementById('${popId}').style.display='none'" style="background:none;border:none;font-size:22px;color:var(--text3);cursor:pointer;padding:0 4px;line-height:1">×</button>
-            </div>
-            <!-- Route summary in popup -->
-            <div style="padding:8px 14px 4px;display:flex;flex-wrap:wrap;gap:4px;align-items:center">${routePills}</div>
-            <div style="padding:0 14px 4px;display:flex;flex-wrap:wrap;gap:6px;align-items:center">${_bookedLine}</div>
-            ${_challanRows?`<div style="padding:0 14px 8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center">${_challanRows}</div>`:""}
-            <!-- Action row -->
-            <div style="padding:10px 14px 14px;border-top:2px solid var(--accent)" onclick="event.stopPropagation()">
-              <div id="camBox_${sid}" style="display:none;flex-direction:column;gap:4px;margin-bottom:8px">
-                <video id="vid_${sid}" autoplay playsinline style="width:100%;max-height:140px;border-radius:8px;border:1px solid var(--border2)"></video>
-                <div style="display:flex;gap:6px">
-                  <button class="btn btn-primary" onclick="snapInline('${sid}')" style="flex:1;font-size:12px;padding:6px">📸 Snap</button>
-                  <button class="btn btn-secondary" onclick="stopInlineCam('${sid}')" style="flex:1;font-size:12px;padding:6px">✕ Close</button>
+            <div style="padding:14px 16px 10px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:1;border-radius:16px 16px 0 0">
+              <div style="display:flex;align-items:stretch;gap:10px">
+                <!-- Stacked Trip ID + Vehicle -->
+                <div style="display:flex;flex-direction:column;gap:8px;flex:1;min-width:0">
+                  <span style="font-family:var(--mono);font-size:40px;font-weight:900;color:#fff;background:var(--accent);padding:4px 18px;border-radius:10px;display:block;line-height:1.2;text-align:center">${seg.tripId}</span>
+                  <span style="font-family:var(--mono);font-size:clamp(22px,6vw,40px);font-weight:900;color:var(--text);background:#fef08a;border:2px solid #ca8a04;border-radius:10px;padding:4px 14px;display:block;white-space:nowrap;text-align:center">${hasVeh?vehNum:'No Vehicle'}</span>
                 </div>
-              </div>
-              <canvas id="cnv_${sid}" style="display:none"></canvas>
-              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-                <div style="position:relative;flex-shrink:0;width:68px">
-                  <div id="thumbEmpty_${sid}" onclick="showThumbPicker('${sid}')" title="Capture Vehicle Photo" style="width:68px;height:52px;border-radius:10px;border:3px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;background:var(--surface2)">📷</div>
-                  <img id="thumbImg_${sid}" style="display:none;width:68px;height:52px;object-fit:cover;border-radius:10px;border:3px solid var(--green);cursor:pointer" onclick="openPhoto(this.src)">
-                  <button id="thumbClear_${sid}" onclick="clearInlinePhoto('${sid}')" style="display:none;position:absolute;top:-8px;right:-8px;background:#dc2626;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;padding:0;line-height:1">×</button>
+                <!-- Camera square button — height matches both stacked badges -->
+                <div style="position:relative;flex-shrink:0;align-self:stretch;display:flex">
+                  <div id="thumbEmpty_${sid}" onclick="showThumbPicker('${sid}')" title="Capture Vehicle Photo" style="width:100%;min-width:80px;height:100%;border-radius:10px;border:3px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:36px;cursor:pointer;background:var(--surface2);aspect-ratio:1">📷</div>
+                  <img id="thumbImg_${sid}" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:10px;border:3px solid var(--green);cursor:pointer" onclick="openPhoto(this.src)">
+                  <button id="thumbClear_${sid}" onclick="clearInlinePhoto('${sid}')" style="display:none;position:absolute;top:-8px;right:-8px;background:#dc2626;color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:13px;cursor:pointer;padding:0;line-height:1">×</button>
                   <div id="thumbPicker_${sid}" style="display:none;position:fixed;z-index:9999;background:var(--surface);border:1px solid var(--border2);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.2);padding:4px;min-width:140px">
                     <div onclick="openInlineCam('${sid}')" style="padding:8px 12px;cursor:pointer;font-size:13px;border-radius:6px;display:flex;align-items:center;gap:6px;margin-bottom:2px" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">📷 Camera</div>
                     <label style="padding:8px 12px;cursor:pointer;font-size:13px;border-radius:6px;display:flex;align-items:center;gap:6px;margin:0" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">🖼 File<input type="file" accept="${_photoAccept()}" capture="environment" style="display:none" onchange="onInlineFile(this,'${sid}')"></label>
                   </div>
                 </div>
+              </div>
+              <!-- Cam preview box -->
+              <div id="camBox_${sid}" style="display:none;flex-direction:column;gap:4px;margin-top:8px">
+                <video id="vid_${sid}" autoplay playsinline style="width:100%;max-height:160px;border-radius:8px;border:1px solid var(--border2)"></video>
+                <div style="display:flex;gap:6px">
+                  <button class="btn btn-primary" onclick="snapInline('${sid}')" style="flex:1;font-size:13px;padding:7px">📸 Snap</button>
+                  <button class="btn btn-secondary" onclick="stopInlineCam('${sid}')" style="flex:1;font-size:13px;padding:7px">✕ Close</button>
+                </div>
+              </div>
+            </div>
+            <!-- Route summary in popup -->
+            <div style="padding:8px 16px 4px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:16px">${routePills}</div>
+            <div style="padding:4px 16px 6px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:16px">${_bookedLine}</div>
+            ${_challanRows?`<div style="padding:0 16px 10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:15px">${_challanRows}</div>`:""}
+            <!-- Action row -->
+            <div style="padding:10px 14px 14px;border-top:2px solid var(--accent)" onclick="event.stopPropagation()">
+              <canvas id="cnv_${sid}" style="display:none"></canvas>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
                 ${(()=>{
                   const _noVeh=!hasVeh;
                   const _noCh=_gateExitBlocked;
@@ -5492,7 +5517,8 @@ function renderKap(){
                   const _btn=_gateExitBlocked
                     ?`<button class="btn btn-danger" disabled style="height:52px;flex:1;font-size:14px;font-weight:800;opacity:.4;cursor:not-allowed;white-space:nowrap">${btnLabel}</button>`
                     :`<button class="btn ${btnCls}" onclick="doKapInline('${seg.id}',${_isStep5?5:cs})" style="height:52px;flex:1;font-size:14px;font-weight:800;white-space:nowrap">${btnLabel}</button>`;
-                  return _btn+_warn;
+                  const _closeBtn=`<button onclick="_kapClosePopup('${popId}')" style="height:52px;width:52px;flex-shrink:0;font-size:22px;font-weight:900;background:var(--surface2);border:2px solid var(--border2);border-radius:8px;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center" title="Close">✕</button>`;
+                  return _btn+_warn+_closeBtn;
                 })()}
               </div>
             </div>
@@ -5594,10 +5620,10 @@ function renderKap(){
         const lf=byId(DB.locations,from),lt=byId(DB.locations,to);
         const cf=lf?.colour||'var(--accent)',ct=lt?.colour||'var(--accent)';
         return (i===0
-          ?`<span style="background:${cf};color:${colourContrast(cf)};padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap">${lf?.name||'?'}</span>`
+          ?`<span style="background:${cf};color:${colourContrast(cf)};padding:2px 9px;border-radius:4px;font-size:13px;font-weight:700;white-space:nowrap">${lf?.name||'?'}</span>`
           :'')
-          +`<span style="color:var(--accent);font-weight:900;font-size:11px;margin:0 2px">⟶</span>`
-          +`<span style="background:${ct};color:${colourContrast(ct)};padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap">${lt?.name||'?'}</span>`;
+          +`<span style="color:var(--accent);font-weight:900;font-size:14px;margin:0 3px">⟶</span>`
+          +`<span style="background:${ct};color:${colourContrast(ct)};padding:2px 9px;border-radius:4px;font-size:13px;font-weight:700;white-space:nowrap">${lt?.name||'?'}</span>`;
       }).join('');
 
       return `<div class="seg-card" style="padding:0;overflow:hidden;cursor:pointer;border:none;${myStyle};position:relative;padding-left:26px" onclick="toggleKapHistCard('${hid}')"><div style="position:absolute;left:0;top:0;bottom:0;width:26px;background:rgba(0,0,0,0.28);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff;user-select:none">${histSegs.length-histSegs.indexOf(seg)}</div>
@@ -6364,9 +6390,9 @@ function renderMRHistory(){
     const mrRoutePills=(()=>{
       const lf=byId(DB.locations,seg.sLoc),lt=byId(DB.locations,seg.dLoc);
       const cf=lf?.colour||'var(--accent)',ct=lt?.colour||'var(--accent)';
-      return `<span style="background:${cf};color:${colourContrast(cf)};padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap">${lf?.name||'?'}</span>`
-        +`<span style="color:var(--accent);font-weight:900;font-size:11px;margin:0 2px">⟶</span>`
-        +`<span style="background:${ct};color:${colourContrast(ct)};padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap">${lt?.name||'?'}</span>`;
+      return `<span style="background:${cf};color:${colourContrast(cf)};padding:2px 9px;border-radius:4px;font-size:13px;font-weight:700;white-space:nowrap">${lf?.name||'?'}</span>`
+        +`<span style="color:var(--accent);font-weight:900;font-size:14px;margin:0 3px">⟶</span>`
+        +`<span style="background:${ct};color:${colourContrast(ct)};padding:2px 9px;border-radius:4px;font-size:13px;font-weight:700;white-space:nowrap">${lt?.name||'?'}</span>`;
     })();
 
     return `<div class="seg-card" style="padding:0;overflow:hidden;cursor:pointer;border:none;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;margin-bottom:6px;position:relative;padding-left:38px" onclick="toggleMrCard('${cardId}')">
@@ -6838,11 +6864,11 @@ function renderApprove(){
       return locs.map((id,i)=>{
         const l=byId(DB.locations,id);const clr=l?.colour||'var(--accent)';
         return (i===0
-          ?`<span style="background:${clr};color:${colourContrast(clr)};padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap">${l?.name||'?'}</span>`
+          ?`<span style="background:${clr};color:${colourContrast(clr)};padding:2px 9px;border-radius:4px;font-size:13px;font-weight:700;white-space:nowrap">${l?.name||'?'}</span>`
           :'')+
           (i<locs.length-1
-            ?`<span style="color:var(--accent);font-weight:900;font-size:11px;margin:0 2px">⟶</span>`+
-              (()=>{const nl=byId(DB.locations,locs[i+1]);const nc=nl?.colour||'var(--accent)';return `<span style="background:${nc};color:${colourContrast(nc)};padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap">${nl?.name||'?'}</span>`;})()
+            ?`<span style="color:var(--accent);font-weight:900;font-size:14px;margin:0 3px">⟶</span>`+
+              (()=>{const nl=byId(DB.locations,locs[i+1]);const nc=nl?.colour||'var(--accent)';return `<span style="background:${nc};color:${colourContrast(nc)};padding:2px 9px;border-radius:4px;font-size:13px;font-weight:700;white-space:nowrap">${nl?.name||'?'}</span>`;})()
             :'');
       }).join('');
     })();
